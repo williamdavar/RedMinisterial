@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Comunidad Davar - Red Ministerial</title>
   
-  <!-- Identidad Visual Sagrada -->
-  <link rel="icon" type="image/jpg" href="https://scontent.fsyq4-1.fna.fbcdn.net/v/t39.30808-6/641550060_26884659304454362_7081351474910011629_n.jpg?stp=dst-jpg_p526x296_tt6&_nc_cat=111&ccb=1-7&_nc_sid=13d280&_nc_ohc=2LBns0CevfsQ7kNvwGlaNgn&_nc_oc=AdnqNvceRNeNnJ7J7q5yw0i7Ow-UQZmlazarAScWYjEkBWbR_T2vA4svJ-IEGcvRnSJzVKGqgr75IiSxmhCIcgqe&_nc_zt=23&_nc_ht=scontent.fsyq4-1.fna&_nc_gid=Pxa5MTpWa5LZyLPx7a5hAw&oh=00_AfuuOZe5aSrlizfZJTik_IantMTGcmfCdmixhR_TnwI0-g&oe=69A2BC7D">
-  <link rel="apple-touch-icon" href="https://scontent.fsyq4-1.fna.fbcdn.net/v/t39.30808-6/641550060_26884659304454362_7081351474910011629_n.jpg?stp=dst-jpg_p526x296_tt6&_nc_cat=111&ccb=1-7&_nc_sid=13d280&_nc_ohc=2LBns0CevfsQ7kNvwGlaNgn&_nc_oc=AdnqNvceRNeNnJ7J7q5yw0i7Ow-UQZmlazarAScWYjEkBWbR_T2vA4svJ-IEGcvRnSJzVKGqgr75IiSxmhCIcgqe&_nc_zt=23&_nc_ht=scontent.fsyq4-1.fna&_nc_gid=Pxa5MTpWa5LZyLPx7a5hAw&oh=00_AfuuOZe5aSrlizfZJTik_IantMTGcmfCdmixhR_TnwI0-g&oe=69A2BC7D">
+  <!-- Identidad Visual Sagrada - Logo Permanente en SVG -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%23004fb1%22%2F%3E%3Ccircle%20cx%3D%22100%22%20cy%3D%22100%22%20r%3D%2290%22%20fill%3D%22none%22%20stroke%3D%22%23D4AF37%22%20stroke-width%3D%228%22%2F%3E%3Ctext%20x%3D%22100%22%20y%3D%22115%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2280%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%22-5%22%3ECD%3C%2Ftext%3E%3Ctext%20x%3D%22100%22%20y%3D%22155%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2224%22%20fill%3D%22%23D4AF37%22%20text-anchor%3D%22middle%22%20text-transform%3D%22uppercase%22%3EDios%3C%2Ftext%3E%3C%2Fsvg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%23004fb1%22%2F%3E%3Ccircle%20cx%3D%22100%22%20cy%3D%22100%22%20r%3D%2290%22%20fill%3D%22none%22%20stroke%3D%22%23D4AF37%22%20stroke-width%3D%228%22%2F%3E%3Ctext%20x%3D%22100%22%20y%3D%22115%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2280%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%22-5%22%3ECD%3C%2Ftext%3E%3Ctext%20x%3D%22100%22%20y%3D%22155%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2224%22%20fill%3D%22%23D4AF37%22%20text-anchor%3D%22middle%22%20text-transform%3D%22uppercase%22%3EDios%3C%2Ftext%3E%3C%2Fsvg%3E">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
@@ -26,23 +26,30 @@
     :root { --fb-blue: #1877F2; --fb-bg: #F0F2F5; --fb-white: #FFFFFF; --davar-gold: #D4AF37; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--fb-bg); margin: 0; color: #1C1E21; overflow: hidden; height: 100vh; }
     
-    .header-fb { background: var(--fb-white); height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; position: fixed; top: 0; width: 100%; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-bottom: 1px solid #e4e6eb; }
+    .header-fb { background: var(--fb-white); height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; position: fixed; top: 0; width: 100%; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-bottom: 1px solid #e4e6eb; }
     
-    .logo-cd { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--fb-blue), #004fb1); display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid var(--davar-gold); box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; flex-shrink: 0; transition: transform 0.2s; }
+    .logo-cd { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--fb-blue), #004fb1); display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid var(--davar-gold); box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; flex-shrink: 0; transition: transform 0.2s; }
     .logo-cd:active { transform: scale(0.9); }
-    .logo-cd .initials { color: white; font-weight: 900; font-size: 13px; line-height: 1; letter-spacing: -1px; }
-    .logo-cd .sub-text { color: var(--davar-gold); font-size: 5px; font-weight: 900; text-transform: uppercase; margin-top: 1px; }
+    .logo-cd .initials { color: white; font-weight: 900; font-size: 14px; line-height: 1; letter-spacing: -1px; }
+    .logo-cd .sub-text { color: var(--davar-gold); font-size: 6px; font-weight: 900; text-transform: uppercase; margin-top: 1px; }
 
     .card-social { background: var(--fb-white); border-radius: 12px; border: 1px solid #dddfe2; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 12px; overflow: hidden; position: relative; }
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #bcc0c4; border-radius: 10px; }
     
-    .post-opt-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px; font-weight: 600; color: #65676B; }
+    .post-opt-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px; font-weight: 700; color: #65676B; }
     .post-opt-btn:hover { background: #F2F2F2; }
 
     .live-overlay { position: fixed; inset: 0; background: #000; z-index: 5000; display: flex; flex-direction: column; }
-    .btn-circle-action { width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; color: white; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.3); transition: 0.2s; cursor: pointer; }
+    .btn-circle-action { width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; color: white; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.3); transition: 0.2s; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,0.5); }
     .btn-circle-action:active { transform: scale(0.85); }
+
+    /* Barra Inferior Ministerial Robusta */
+    .nav-bottom { position: fixed; bottom: 0; width: 100%; height: 75px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #e4e6eb; z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); padding-bottom: env(safe-area-inset-bottom); }
+    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #65676B; transition: 0.2s; border: none; background: none; outline: none; padding: 6px 0; cursor: pointer; }
+    .nav-btn.active { color: var(--fb-blue); }
+    .nav-btn i { font-size: 20px; margin-bottom: 2px; }
+    .nav-btn span { font-size: 8.5px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; margin-top: 3px; }
 
     .animate-up { animation: slideUp 0.3s ease-out forwards; }
     @keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -52,12 +59,8 @@
     .reac-btn.active-amen { color: var(--fb-blue); }
     .reac-btn.active-bendice { color: #f02849; }
 
-    /* Barra Inferior Ministerial Robusta con Texto Fijo */
-    .nav-bottom { position: fixed; bottom: 0; width: 100%; height: 75px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #e4e6eb; z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); padding-bottom: env(safe-area-inset-bottom); }
-    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #65676B; transition: 0.2s; border: none; background: none; outline: none; padding: 6px 0; cursor: pointer; }
-    .nav-btn.active { color: var(--fb-blue); }
-    .nav-btn i { font-size: 20px; margin-bottom: 2px; }
-    .nav-btn span { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; margin-top: 2px; }
+    .emoji-panel { display: grid; grid-template-cols: repeat(6, 1fr); gap: 8px; padding: 12px; background: white; border: 1px solid #ddd; border-radius: 12px; position: absolute; z-index: 100; bottom: 70px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 260px; max-height: 150px; overflow-y: auto; }
+    .emoji-item { font-size: 22px; cursor: pointer; text-align: center; padding: 4px; }
 
     @media (max-width: 640px) {
       .header-fb { padding: 0 10px; }
@@ -71,20 +74,45 @@
     const { useState, useEffect, useRef } = React;
 
     // --- CONFIG FIREBASE ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyDquU86YIWcujUgTLwoJPZcrRBjNGLkz4", 
-      authDomain: "project-a972c4a3-b179-439a-9a5.firebaseapp.com",
-      projectId: "project-a972c4a3-b179-439a-9a5",
-      storageBucket: "project-a972c4a3-b179-439a-9a5.firebasestorage.app",
-      appId: "1:501639945234:web:e72c02f89beb3b86540ccb"
-    };
+    let firebaseConfig = {};
+    try {
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } else {
+             console.warn("No se encontró la configuración de Firebase.");
+        }
+    } catch (e) {
+        console.error("Error al parsear __firebase_config:", e);
+    }
 
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const appId = "comunidad-davar-v2026-unificado";
+    let auth;
+    let db;
     
-    // --- MOTOR DE IMÁGENES LIGERO (Estilo Facebook) ---
+    if (firebaseConfig && firebaseConfig.apiKey) {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        auth = firebase.auth();
+        db = firebase.firestore();
+    }
+    
+    const appId = typeof __app_id !== 'undefined' ? __app_id : "comunidad-davar-v2026-arca-final"; 
+    
+    // LOGO ETERNO (SVG Inline codificado, nunca se romperá)
+    const LOGO_URL = "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%23004fb1%22%2F%3E%3Ccircle%20cx%3D%22100%22%20cy%3D%22100%22%20r%3D%2290%22%20fill%3D%22none%22%20stroke%3D%22%23D4AF37%22%20stroke-width%3D%228%22%2F%3E%3Ctext%20x%3D%22100%22%20y%3D%22115%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2280%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%22-5%22%3ECD%3C%2Ftext%3E%3Ctext%20x%3D%22100%22%20y%3D%22155%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2224%22%20fill%3D%22%23D4AF37%22%20text-anchor%3D%22middle%22%20text-transform%3D%22uppercase%22%3EDios%3C%2Ftext%3E%3C%2Fsvg%3E";
+    // PORTADA ETERNA
+    const DEFAULT_COVER = "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221000%22%20height%3D%22400%22%3E%3Crect%20width%3D%221000%22%20height%3D%22400%22%20fill%3D%22%231c1c1d%22%2F%3E%3Cpath%20d%3D%22M0%20400%20L1000%20400%20L1000%20200%20Q500%20350%200%20200%20Z%22%20fill%3D%22%23D4AF37%22%20opacity%3D%220.1%22%2F%3E%3C%2Fsvg%3E";
+
+    // --- COMPONENTES AUXILIARES ---
+
+    function GuestBanner({ user }) {
+        return (
+            <div className="bg-red-600 text-white text-center py-2 px-4 text-[10px] font-black uppercase tracking-widest shadow-md">
+                ⏳ MODO VISITANTE: Ingrese en "Perfil" para participar plenamente.
+            </div>
+        );
+    }
+
     const optimizeMedia = (file) => new Promise((resolve) => {
       if (!file) return resolve('');
       const reader = new FileReader();
@@ -108,64 +136,34 @@
       };
     });
 
-    // --- COMPONENTES ---
-
-    function GuestBanner({ user }) {
-        const [timeLeft, setTimeLeft] = useState(60);
-        useEffect(() => {
-            if(!user) return;
-            const created = user.metadata?.creationTime ? new Date(user.metadata.creationTime).getTime() : Date.now();
-            const timer = setInterval(() => {
-                const elapsed = Math.floor((Date.now() - created) / 60000);
-                if (elapsed >= 60) { 
-                    clearInterval(timer); 
-                    sessionStorage.clear(); 
-                    auth.signOut().then(() => window.location.reload()); 
-                } else { 
-                    setTimeLeft(60 - elapsed); 
-                }
-            }, 30000);
-            return () => clearInterval(timer);
-        }, [user]);
-        return (
-            <div className="bg-red-600 text-white text-center py-1.5 px-4 text-[9px] font-black uppercase tracking-widest animate-pulse z-50 shadow-md">
-                ⏳ Visitante: Tienes {timeLeft} minutos para registrarte en "Perfil" o serás desconectado.
-            </div>
-        );
-    }
-
     const MediaProjector = ({ url }) => {
       if (!url) return null;
       if (url.startsWith('data:image') || url.match(/\.(jpeg|jpg|gif|png|webp)$/)) {
-        return <div className="mt-2 bg-[#f0f2f5] rounded-lg overflow-hidden flex justify-center border border-gray-100 shadow-sm"><img src={url} className="max-h-72 object-contain" /></div>;
+        return <div className="mt-2 bg-[#f0f2f5] rounded-lg overflow-hidden flex justify-center border border-gray-100 shadow-sm"><img src={url} className="max-h-72 object-contain" alt="Imagen Ministerial" onError={(e)=>{e.target.onerror = null; e.target.src=LOGO_URL;}} /></div>;
       }
-      return <a href={url} target="_blank" className="p-3 bg-blue-50 rounded-lg block text-blue-600 font-bold truncate text-[12px] mt-2 border border-blue-100"><i className="fa-solid fa-link mr-2"></i> Ver contenido</a>;
+      return <a href={url} target="_blank" className="p-3 bg-blue-50 rounded-lg border border-blue-100 block text-blue-600 font-bold truncate text-[11px] mt-2 shadow-sm"><i className="fa-solid fa-link mr-2"></i> Abrir contenido externo</a>;
     };
 
-    const LiveOverlay = ({ user, profile, bId, isBroadcaster, onClose }) => {
-      if (!profile || !user) return null;
-      const roomName = `DavarMinisterio_${bId}`;
-      const livesCol = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives');
-
+    const LiveOverlay = ({ profile, broadcasterId, isBroadcaster, onClose }) => {
+      const roomName = `DavarMinisterio_${broadcasterId}`;
       useEffect(() => {
-        if (isBroadcaster) { livesCol.doc(bId).set({uid:bId, name:profile.name, photo:profile.photo, at:Date.now()}); }
-        return () => { if(isBroadcaster) livesCol.doc(bId).delete(); };
+        if (isBroadcaster && db) {
+          db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').doc(broadcasterId).set({ uid: broadcasterId, name: profile.name, photo: profile.photo || LOGO_URL, at: Date.now() });
+        }
+        return () => { if (isBroadcaster && db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').doc(broadcasterId).delete(); };
       }, []);
 
       return (
         <div className="live-overlay animate-in">
           <div className="flex-1 bg-black relative flex items-center justify-center">
-            {/* JITSI INTERACTIVO */}
             <iframe src={`https://meet.jit.si/${roomName}#config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.disableDeepLinking=true`} className="w-full h-full border-none" allow="camera; microphone; fullscreen; autoplay" />
-            <div className="absolute top-6 left-4 flex items-center gap-2 bg-black/40 p-2 pr-4 rounded-full border border-white/20 shadow-xl backdrop-blur-md">
-               <img src={profile.photo} className="h-8 w-8 rounded-full border border-white" />
+            <div className="absolute top-8 left-4 flex items-center gap-2 bg-black/40 p-2 pr-4 rounded-full border border-white/20 shadow-xl backdrop-blur-md">
+               <img src={profile.photo || LOGO_URL} className="h-8 w-8 rounded-full border border-white object-cover" onError={(e)=>{e.target.src=LOGO_URL}} />
                <p className="text-white font-black text-[9px] uppercase tracking-tighter">● EN VIVO INTERACTIVO</p>
             </div>
-            
-            {/* BOTÓN FINALIZAR (STOP) CLARO PARA CELULARES */}
-            <div className="absolute top-6 right-4">
+            <div className="absolute top-8 right-4">
               <div onClick={onClose} className="btn-circle-action bg-red-600 shadow-2xl border-white border-2 animate-pulse" title="Finalizar Transmisión">
-                <i className="fa-solid fa-stop text-xl"></i>
+                <i className="fa-solid fa-stop text-2xl"></i>
               </div>
             </div>
           </div>
@@ -174,18 +172,23 @@
     };
 
     function WallView({ user, profile, isAdmin, onStartLive, onJoinLive }) {
-      if (!user) return null;
       const [posts, setPosts] = useState([]); const [lives, setLives] = useState([]);
       const [txt, setTxt] = useState(''); const [img, setImg] = useState(''); const [aud, setAud] = useState('');
-      const [loading, setLoading] = useState(false); const [showEmoji, setShowEmoji] = useState(false);
+      const [loading, setLoading] = useState(false); const [sysMsg, setSysMsg] = useState('');
       const [audioState, setAudioState] = useState('idle');
       const [recordingTime, setRecordingTime] = useState(0);
+      const [linkInputOpen, setLinkInputOpen] = useState(false); const [linkUrl, setLinkUrl] = useState('');
+      const [showEmoji, setShowEmoji] = useState(false);
       const mrRef = useRef(null); const audioChunks = useRef([]); const timerRef = useRef(null);
       
-      const postCol = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts');
+      let postCol;
+      if (db) {
+        postCol = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts');
+      }
 
       useEffect(() => {
-        const u1 = postCol.onSnapshot(s => setPosts(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>a.at-b.at)), err => console.log("Muro Error"));
+        if(!user || !db || !postCol) return;
+        const u1 = postCol.onSnapshot(s => setPosts(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at)), err => console.log("Muro Error"));
         const u2 = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').onSnapshot(s => setLives(s.docs.map(d=>({id:d.id, ...d.data()}))), err => console.log("Vivos Error"));
         return () => { u1(); u2(); };
       }, [user]);
@@ -193,10 +196,8 @@
       const startVoice = async () => {
         try {
           const s = await navigator.mediaDevices.getUserMedia({ audio: true });
-          // COMPRESIÓN DE GRACIA: 32kbps mono para permitir 3 minutos sin exceder el peso
           const mr = new MediaRecorder(s, { audioBitsPerSecond: 32000 }); 
           mrRef.current = mr; audioChunks.current = [];
-          
           mr.ondataavailable = e => { if (e.data.size > 0) audioChunks.current.push(e.data); };
           mr.onstop = () => { 
             clearInterval(timerRef.current);
@@ -204,61 +205,49 @@
             const r = new FileReader(); r.readAsDataURL(b); r.onloadend = () => setAud(r.result); 
             s.getTracks().forEach(t => t.stop()); setAudioState('idle'); setRecordingTime(0);
           };
-
-          mr.start(); setAudioState('recording');
-          timerRef.current = setInterval(() => setRecordingTime(t => { 
-             if(t >= 180) { mr.stop(); return 180; } 
-             return t+1; 
-          }), 1000);
+          mr.start(); setAudioState('recording'); setSysMsg('');
+          timerRef.current = setInterval(() => setRecordingTime(t => { if(t >= 180) { mr.stop(); return 180; } return t+1; }), 1000);
           document.getElementById('post-dialog').classList.remove('hidden');
-        } catch(e) { alert("Active el micrófono ministerial."); }
+        } catch(e) { setSysMsg("Por favor, permita el acceso al micrófono en su celular."); }
       };
 
       const sendPost = async () => {
-        if(loading || (!txt.trim() && !img && !aud)) return;
-        setLoading(true);
+        if(loading || (!txt.trim() && !img && !aud) || !postCol) return;
+        setLoading(true); setSysMsg('');
         try { 
-          await postCol.add({ uid:user.uid, authorName:profile.name, authorPhoto:profile.photo, text:txt, img, audio:aud, at:Date.now(), reactions:{} });
-          setTxt(''); setImg(''); setAud(''); setShowEmoji(false); document.getElementById('post-dialog').classList.add('hidden');
-        } catch(e) { alert("Error al subir bendición."); }
+          await postCol.add({ uid:user.uid, authorName:profile.name, authorPhoto:profile.photo || LOGO_URL, text:txt, img, audio:aud, at:Date.now(), reactions:{} });
+          setTxt(''); setImg(''); setAud(''); setLinkInputOpen(false); document.getElementById('post-dialog').classList.add('hidden');
+        } catch(e) { setSysMsg("Error al subir bendición. Intente de nuevo."); }
         setLoading(false);
       };
-
-      const updateReac = async (p, type) => {
-          if(!profile) return;
-          const newRs = { ...(p.reactions || {}) };
-          if (newRs[user.uid] === type) delete newRs[user.uid]; else newRs[user.uid] = type;
-          await postCol.doc(p.id).update({ reactions: newRs });
-      };
-
-      const EMOJIS = ['🙏','❤️','🙌','🔥','🌟','📖','🕊️','⛪','💎','🌈','🌍','📜','✨','🎺','💪','🤝','🍞','🍷','👑','🛡️','⚡','🌿','✅'];
 
       return (
         <div className="space-y-4 pb-24 animate-up text-left max-w-[620px] mx-auto px-1 mt-2">
           {lives.map(l => (
             <div key={l.id} className="bg-red-500 p-3 rounded-xl flex items-center justify-between text-white shadow-lg animate-pulse">
-              <div className="flex items-center gap-3"><img src={l.photo} className="h-9 w-9 rounded-full border-2 border-white object-cover shadow-sm" /><p className="font-bold text-[11px] uppercase italic">● EN VIVO: {l.name}</p></div>
-              <button onClick={()=>onJoinLive(l.uid)} className="bg-white text-red-600 px-5 py-1.5 rounded-full font-black text-[10px] uppercase shadow-sm active:scale-95 transition-all">UNIRSE</button>
+              <div className="flex items-center gap-3"><img src={l.photo || LOGO_URL} onError={(e)=>{e.target.src=LOGO_URL}} className="h-9 w-9 rounded-full border-2 border-white object-cover shadow-sm" /><p className="font-bold text-[11px] uppercase italic">● EN VIVO: {l.name}</p></div>
+              <button onClick={()=>onJoinLive(l.uid)} className="bg-white text-red-600 px-5 py-1.5 rounded-full font-black text-[10px] uppercase shadow-sm active:scale-95 transition-all leading-none">UNIRSE</button>
             </div>
           ))}
+
+          {sysMsg && <div className="bg-red-100 text-red-600 p-3 rounded-xl text-center text-xs font-bold shadow-sm">{sysMsg}</div>}
 
           {!profile ? (
             <div className="card-social p-6 text-center border-2 border-red-500/20 bg-white mt-4 shadow-sm">
               <i className="fa-solid fa-user-lock text-3xl text-gray-300 mb-2"></i>
-              <h3 className="text-gray-800 font-black uppercase text-xs mb-1">Modo Visitante</h3>
-              <p className="text-gray-500 text-[10px]">Registre su nombre en <b>Perfil</b> para participar.</p>
+              <h3 className="text-gray-800 font-black uppercase text-xs mb-1 text-center leading-none">Modo Visitante</h3>
+              <p className="text-gray-500 text-[10px] text-center">Identifíquese en <b>Perfil</b> para participar.</p>
             </div>
           ) : (
             <div className="card-social p-4 shadow-sm border border-gray-200 bg-white">
               <div className="flex gap-3 mb-3">
-                <img src={profile.photo || LOGO_URL} className="h-10 w-10 rounded-full object-cover border border-gray-100 shadow-sm" />
-                <div onClick={()=>document.getElementById('post-dialog').classList.remove('hidden')} className="w-full bg-[#f0f2f5] rounded-full p-2.5 px-5 text-gray-500 text-[14px] cursor-pointer hover:bg-[#e4e6e9] italic flex items-center shadow-inner">¿Qué inspiración tienes hoy?</div>
+                <img src={profile.photo || LOGO_URL} onError={(e)=>{e.target.src=LOGO_URL}} className="h-10 w-10 rounded-full object-cover border border-gray-100 shadow-sm" />
+                <div onClick={()=>document.getElementById('post-dialog').classList.remove('hidden')} className="w-full bg-[#f0f2f5] rounded-full p-2.5 px-5 text-gray-500 text-[14px] cursor-pointer hover:bg-[#e4e6e9] italic flex items-center shadow-inner leading-none">¿Qué inspiración tiene hoy?</div>
               </div>
               <div className="flex gap-1 border-t border-gray-100 pt-1">
-                {/* BOTÓN PLAY PARA TRANSMITIR */}
-                <div onClick={onStartLive} className="post-opt-btn text-red-500 font-black active:scale-90"><i className="fa-solid fa-circle-play text-xl"></i><span className="ml-1">PLAY</span></div>
-                <label className="post-opt-btn text-green-600 active:scale-90"><i className="fa-solid fa-camera text-xl"></i><span className="ml-1">FOTO</span><input type="file" className="hidden" accept="image/*" onChange={async e=>{setImg(await optimizeMedia(e.target.files[0])); document.getElementById('post-dialog').classList.remove('hidden');}} /></label>
-                <div onClick={startVoice} className="post-opt-btn text-orange-500 active:scale-90"><i className="fa-solid fa-microphone-lines text-xl"></i><span className="ml-1">VOZ</span></div>
+                <div onClick={onStartLive} className="post-opt-btn text-red-500 font-black active:scale-90"><i className="fa-solid fa-circle-play text-xl"></i><span>PLAY</span></div>
+                <label className="post-opt-btn text-green-600 active:scale-90"><i className="fa-solid fa-camera text-xl"></i><span className="ml-1 text-[11px]">FOTO</span><input type="file" className="hidden" accept="image/*" onChange={async e=>{setImg(await optimizeMedia(e.target.files[0])); document.getElementById('post-dialog').classList.remove('hidden');}} /></label>
+                <div onClick={startVoice} className="post-opt-btn text-orange-500 active:scale-90"><i className="fa-solid fa-microphone-lines text-xl"></i><span className="ml-1 text-[11px]">VOZ</span></div>
               </div>
             </div>
           )}
@@ -266,47 +255,66 @@
           <div id="post-dialog" className="hidden card-social p-5 border-2 border-blue-100 animate-in shadow-2xl relative bg-white z-50">
              <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-2"><h3 className="font-bold text-gray-800 text-[12px] uppercase italic">Nueva Bendición</h3><i onClick={()=>document.getElementById('post-dialog').classList.add('hidden')} className="fa-solid fa-xmark cursor-pointer p-2 bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center"></i></div>
              
-             {/* PANEL DE VOZ REPARADO CON LÍMITE DE 180s */}
              <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl mb-4 text-center shadow-inner">
-                {audioState === 'idle' && !aud ? (
-                   <button onClick={startVoice} className="bg-orange-500 text-white w-12 h-12 rounded-full shadow-lg active:scale-90"><i className="fa-solid fa-microphone"></i></button>
-                ) : audioState !== 'idle' ? (
+                {audioState !== 'idle' ? (
                    <div className="flex flex-col items-center gap-3">
-                      <div className="text-orange-600 font-black text-xl font-mono">{recordingTime}s / 180s</div>
+                      <div className="text-orange-600 font-black text-xl font-mono leading-none">{recordingTime}s / 180s</div>
                       <div className="flex items-center justify-center gap-8">
-                        {audioState === 'recording' ? (
-                           <button onClick={()=> {if(mrRef.current) mrRef.current.pause(); setAudioState('paused'); clearInterval(timerRef.current);}} className="bg-yellow-500 text-white w-14 h-14 rounded-full shadow-md"><i className="fa-solid fa-pause"></i></button>
-                        ) : (
-                           <button onClick={()=> {if(mrRef.current) mrRef.current.resume(); setAudioState('recording'); timerRef.current = setInterval(()=>setRecordingTime(t=>t+1), 1000);}} className="bg-green-500 text-white w-14 h-14 rounded-full shadow-md"><i className="fa-solid fa-play"></i></button>
-                        )}
-                        <button onClick={()=> {if(mrRef.current) mrRef.current.stop()}} className="bg-gray-800 text-white w-14 h-14 rounded-full shadow-md"><i className="fa-solid fa-stop"></i></button>
+                        {audioState === 'recording' ? <button onClick={()=> {if(mrRef.current) mrRef.current.pause(); setAudioState('paused'); clearInterval(timerRef.current);}} className="bg-yellow-500 text-white w-14 h-14 rounded-full shadow-md"><i className="fa-solid fa-pause text-xl"></i></button> : <button onClick={()=> {if(mrRef.current) mrRef.current.resume(); setAudioState('recording'); timerRef.current = setInterval(()=>setRecordingTime(t=>t+1), 1000);}} className="bg-green-500 text-white w-14 h-14 rounded-full shadow-md"><i className="fa-solid fa-play text-xl"></i></button>}
+                        <button onClick={()=> {if(mrRef.current) mrRef.current.stop()}} className="bg-gray-800 text-white w-14 h-14 rounded-full shadow-md"><i className="fa-solid fa-stop text-xl"></i></button>
                       </div>
                    </div>
-                ) : null}
+                ) : (
+                   <button onClick={startVoice} className="bg-orange-500 text-white w-12 h-12 rounded-full shadow-lg active:scale-90"><i className="fa-solid fa-microphone text-xl"></i></button>
+                )}
                 {aud && <div className="mt-2 bg-white p-2 rounded-lg border shadow-sm flex items-center gap-2"><audio src={aud} controls className="h-8 flex-1" /><i onClick={()=>setAud('')} className="fa-solid fa-trash text-red-500 p-1 cursor-pointer"></i></div>}
              </div>
 
-             <textarea value={txt} onChange={e=>setTxt(e.target.value)} placeholder={`Escriba su testimonio ministerial...`} className="w-full h-24 outline-none text-base resize-none placeholder-gray-400 p-2 rounded-xl bg-gray-50/50 shadow-inner" />
+             <textarea value={txt} onChange={e=>setTxt(e.target.value)} placeholder={`Escriba su mensaje aquí...`} className="w-full h-24 outline-none text-base resize-none placeholder-gray-400 p-2 rounded-xl bg-gray-50/50 shadow-inner" />
              {img && <div className="mt-2 relative inline-block"><img src={img} className="h-24 w-24 object-cover rounded-lg shadow-md border-2 border-white" /><i onClick={()=>setImg('')} className="fa-solid fa-circle-xmark absolute -top-2 -right-2 text-gray-800 cursor-pointer bg-white rounded-full text-xl shadow-lg"></i></div>}
              
+             {linkInputOpen && (
+                <div className="flex gap-2 mt-3 bg-blue-50 p-2 rounded-xl border border-blue-100 w-full mb-3">
+                   <input type="text" value={linkUrl} onChange={e=>setLinkUrl(e.target.value)} placeholder="Pegue el enlace aquí" className="flex-1 bg-transparent text-gray-800 text-xs outline-none px-2" />
+                   <button onClick={()=>{ if(linkUrl) { setTxt(prev=>prev+"\n"+linkUrl); setLinkUrl(''); } setLinkInputOpen(false); }} className="bg-[#1877F2] text-white px-4 py-2 rounded-lg text-[10px] font-black uppercase">Añadir</button>
+                </div>
+             )}
+
              <div className="border border-gray-100 rounded-xl p-3 my-3 flex items-center justify-between bg-white relative">
-                <i onClick={()=>setShowEmoji(!showEmoji)} className="fa-regular fa-face-smile text-yellow-500 text-2xl cursor-pointer active:scale-90"></i>
-                {showEmoji && <div className="emoji-panel custom-scrollbar shadow-2xl">{EMOJIS.map(e=>(<span key={e} onClick={()=>{setTxt(p=>p+e); setShowEmoji(false);}} className="emoji-item">{e}</span>))}</div>}
-                <i onClick={()=>{const u=prompt("Pegue enlace (YouTube/FB):"); if(u) setTxt(p=>p+"\n"+u)}} className="fa-solid fa-link text-blue-500 text-xl cursor-pointer"></i>
+                <i onClick={() => setShowEmoji(!showEmoji)} className="fa-regular fa-face-smile text-yellow-500 text-2xl cursor-pointer active:scale-90 shadow-sm"></i>
+                {showEmoji && <div className="emoji-panel custom-scrollbar shadow-2xl">{['🙏','❤️','🙌','🔥','🌟','📖','🕊️','⛪','💎','🌈','🌍','📜','✨','🎺','💪','🤝','🍞','🍷','👑','🛡️','⚡','🌿','✅'].map(e=>(<span key={e} onClick={()=>{setTxt(p=>p+e); setShowEmoji(false);}} className="emoji-item">{e}</span>))}</div>}
+                <i onClick={()=>setLinkInputOpen(!linkInputOpen)} className="fa-solid fa-link text-blue-500 text-xl cursor-pointer active:scale-90"></i>
              </div>
              <button onClick={sendPost} disabled={loading} className="w-full bg-[#1877f2] text-white font-black py-4 rounded-xl shadow-md active:scale-95 text-[13px] uppercase tracking-widest transition-all">{loading ? 'Procesando...' : 'Publicar Bendición'}</button>
           </div>
 
+          {posts.length === 0 && (
+             <div className="text-center p-10 opacity-40">
+                <i className="fa-solid fa-scroll text-5xl mb-4"></i>
+                <p className="font-black uppercase tracking-widest text-xs">El Muro está esperando su bendición.</p>
+             </div>
+          )}
+
           {posts.map(p => (
             <div key={p.id} className="card-social animate-up border border-gray-100 shadow-sm bg-white relative">
-              {(p.uid === user?.uid || isAdmin) && <button onClick={()=>postCol.doc(p.id).delete()} className="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors z-10"><i className="fa-solid fa-trash-can"></i></button>}
-              <div className="p-4 flex gap-3 pr-8 text-left"><img src={p.authorPhoto} className="h-10 w-10 rounded-full object-cover border border-[#D4AF37]/30 shadow-sm" /><div><p className="font-bold text-[13px] leading-none mb-1">{p.authorName}</p><p className="text-[9px] text-gray-400 font-black uppercase">{new Date(p.at).toLocaleString()}</p></div></div>
+              {(p.uid === user?.uid || isAdmin) && <button onClick={()=>{ postCol.doc(p.id).delete(); }} className="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors z-10 p-2"><i className="fa-solid fa-trash-can"></i></button>}
+              <div className="p-4 flex gap-3 pr-8 text-left"><img src={p.authorPhoto || LOGO_URL} onError={(e)=>{e.target.src=LOGO_URL}} className="h-10 w-10 rounded-full object-cover border border-[#D4AF37]/30 shadow-sm" /><div><p className="font-bold text-[13px] leading-none mb-1 uppercase tracking-tighter">{p.authorName}</p><p className="text-[9px] text-gray-400 font-black uppercase tracking-widest leading-none">{new Date(p.at).toLocaleString()}</p></div></div>
               {p.text && <p className="px-5 pb-3 text-[15px] leading-relaxed text-gray-800 whitespace-pre-wrap">{p.text}</p>}
-              <MediaProjector url={p.img} />
+              <MediaProjector url={p.img || (p.text.match(/https?:\/\/\S+/)?.[0])} />
               {p.audio && <div className="px-4 py-3 bg-gray-50/50 border-y shadow-inner"><audio src={p.audio} controls className="w-full h-10" /></div>}
               <div className="reac-bar border-t border-gray-100 pt-1 flex px-2 gap-2">
-                <button disabled={!profile} onClick={()=>updateReac(p, 'amen')} className={`reac-btn ${p.reactions?.[user?.uid]==='amen'?'active-amen':''}`}><i className="fa-solid fa-hands-praying text-lg"></i> <span className="text-[11px] font-bold">Amén</span> <span className="text-xs ml-1 font-black">{Object.values(p.reactions||{}).filter(r=>r==='amen').length || ''}</span></button>
-                <button disabled={!profile} onClick={()=>updateReac(p, 'bendice')} className={`reac-btn ${p.reactions?.[user?.uid]==='bendice'?'active-bendice':''}`}><i className="fa-solid fa-heart text-lg"></i> <span className="text-[11px] font-bold">Bendice</span> <span className="text-xs ml-1 font-black">{Object.values(p.reactions||{}).filter(r=>r==='bendice').length || ''}</span></button>
+                <button disabled={!profile} onClick={async()=>{
+                    if(!postCol) return;
+                    const rs = { ...(p.reactions || {}) };
+                    if (rs[user.uid] === 'amen') delete rs[user.uid]; else rs[user.uid] = 'amen';
+                    await postCol.doc(p.id).update({ reactions: rs });
+                }} className={`reac-btn ${p.reactions?.[user?.uid]==='amen'?'active-amen':''}`}><i className="fa-solid fa-hands-praying text-lg"></i> <span className="text-[11px] font-bold">Amén</span> <span className="text-xs ml-1 font-black">{Object.values(p.reactions||{}).filter(r=>r==='amen').length || ''}</span></button>
+                <button disabled={!profile} onClick={async()=>{
+                    if(!postCol) return;
+                    const rs = { ...(p.reactions || {}) };
+                    if (rs[user.uid] === 'bendice') delete rs[user.uid]; else rs[user.uid] = 'bendice';
+                    await postCol.doc(p.id).update({ reactions: rs });
+                }} className={`reac-btn ${p.reactions?.[user?.uid]==='bendice'?'active-bendice':''}`}><i className="fa-solid fa-heart text-lg"></i> <span className="text-[11px] font-bold">Bendice</span> <span className="text-xs ml-1 font-black">{Object.values(p.reactions||{}).filter(r=>r==='bendice').length || ''}</span></button>
               </div>
             </div>
           ))}
@@ -315,35 +323,39 @@
     }
 
     function ChatPanel({ user, profile, isAdmin }) {
-      if (!user) return null;
       const [msgs, setMsgs] = useState([]); const [txt, setTxt] = useState('');
-      const col = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('chat');
+      let col;
+      if (db) {
+         col = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('chat');
+      }
       const endRef = useRef(null);
       useEffect(() => { 
-        if (!user) return;
+        if (!user || !col) return;
         const unsub = col.onSnapshot(s => setMsgs(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>a.at-b.at).slice(-60)), err => console.log("Chat Error")); 
         return ()=>unsub(); 
       }, [user]);
       useEffect(() => { endRef.current?.scrollIntoView({behavior:'smooth'}); }, [msgs]);
-      const send = async () => { if(!txt.trim() || !profile) return; await col.add({uid:user.uid, name:profile.name, text:txt.trim(), photo:profile.photo, at:Date.now()}); setTxt(''); };
+      const send = async () => { if(!txt.trim() || !profile || !col) return; await col.add({uid:user.uid, name:profile.name, text:txt.trim(), photo:profile.photo || LOGO_URL, at:Date.now()}); setTxt(''); };
       return (
         <div className="h-full flex flex-col card-social overflow-hidden animate-up bg-white border-t-4 border-[#1877F2] shadow-2xl mt-2 mx-2">
-          <div className="p-3 border-b text-center font-black text-gray-500 text-[10px] uppercase bg-gray-50 shadow-sm italic tracking-widest">Chat Ministerial</div>
+          <div className="p-3 border-b text-center font-black text-gray-500 text-[10px] uppercase bg-gray-50 shadow-sm italic tracking-widest leading-none">Chat Ministerial</div>
           <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50/50 custom-scrollbar">
+            {msgs.length === 0 && <div className="text-center mt-10 opacity-40"><i className="fa-solid fa-comments text-4xl mb-2"></i><p className="text-[10px] font-black uppercase">Sin mensajes aún.</p></div>}
             {msgs.map((m,i)=>(
               <div key={m.id} className={`flex gap-2 relative group ${m.uid===user?.uid?'flex-row-reverse':''}`}>
-                <img src={m.photo||LOGO_URL} className="h-8 w-8 rounded-full object-cover border shadow-sm" />
+                <img src={m.photo || LOGO_URL} onError={(e)=>{e.target.src=LOGO_URL}} className="h-8 w-8 rounded-full object-cover border shadow-sm" />
                 <div className={`p-3 rounded-2xl text-[13px] max-w-[80%] shadow-sm ${m.uid===user?.uid?'bg-[#1877F2] text-white font-medium':'bg-white text-gray-800'}`}>
                    {m.uid !== user?.uid && <p className="text-[8px] font-black text-gray-400 mb-1 uppercase leading-none">{m.name}</p>}
                    {m.text}
                 </div>
+                {isAdmin && <button onClick={()=>col.doc(m.id).delete()} className="text-red-400 px-2 active:scale-90"><i className="fa-solid fa-trash-can text-xs"></i></button>}
               </div>
             ))}
             <div ref={endRef} />
           </div>
           <div className="p-3 bg-white flex gap-2 border-t shadow-inner">
             {!profile ? <div className="w-full text-center text-xs text-red-500 font-bold p-2 bg-red-50 rounded-xl">REGÍSTRESE EN PERFIL.</div> : 
-              <><input type="text" value={txt} onChange={e=>setTxt(e.target.value)} placeholder="Escriba aquí..." className="flex-1 bg-gray-50 rounded-full px-5 text-sm outline-none border border-gray-200" onKeyDown={e=>e.key==='Enter'&&send()} /><button onClick={send} className="w-10 h-10 rounded-full bg-[#1877F2] text-white flex items-center justify-center active:scale-90 shadow-md transition-transform"><i className="fa-solid fa-paper-plane text-lg"></i></button></>
+              <><input type="text" value={txt} onChange={e=>setTxt(e.target.value)} placeholder="Escriba aquí..." className="flex-1 bg-gray-50 rounded-full px-5 text-sm outline-none border border-gray-200 shadow-inner" onKeyDown={e=>e.key==='Enter'&&send()} /><button onClick={send} className="w-10 h-10 rounded-full bg-[#1877F2] text-white flex items-center justify-center active:scale-90 shadow-md transition-transform"><i className="fa-solid fa-paper-plane text-lg"></i></button></>
             }
           </div>
         </div>
@@ -352,14 +364,26 @@
 
     function DevotionalsView() {
       const [devs, setDevs] = useState([]);
-      const colDev = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('devotionals');
-      useEffect(() => { const unsub = colDev.onSnapshot(s => setDevs(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>a.at-b.at)), err => console.log(err)); return ()=>unsub(); }, []);
+      let colDev;
+      if (db) {
+          colDev = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('devotionals');
+      }
+      useEffect(() => { 
+          if(!colDev) return;
+          const unsub = colDev.onSnapshot(s => setDevs(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at)), err => console.log(err)); return ()=>unsub(); 
+      }, []);
       return (
         <div className="space-y-6 pb-24 max-w-[650px] mx-auto px-4 mt-4 animate-in">
           <div className="card-social p-6 bg-gradient-to-br from-[#D4AF37]/20 to-white border-t-4 border-[#D4AF37] shadow-xl text-center">
             <i className="fa-solid fa-scroll text-3xl text-[#D4AF37] mb-3"></i>
             <h2 className="font-black text-xl text-gray-800 uppercase tracking-tighter italic">Prédica Diaria</h2>
           </div>
+          {devs.length === 0 && (
+             <div className="text-center p-10 opacity-40">
+                <i className="fa-solid fa-book-bible text-5xl mb-4"></i>
+                <p className="font-black uppercase tracking-widest text-xs">Esperando la palabra del día.</p>
+             </div>
+          )}
           {devs.map(d => (
             <div key={d.id} className="card-social p-6 bg-white border border-gray-200 shadow-md animate-up text-left">
               <h3 className="font-black text-lg text-[#1877F2] mb-1 italic uppercase">{d.title}</h3>
@@ -371,13 +395,23 @@
       );
     }
 
-    function GroupView() {
+    function GroupView({ user }) {
       const [groups, setGroups] = useState([]);
-      const colG = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('groups');
-      useEffect(() => { if(!user) return; const unsub = colG.onSnapshot(s => setGroups(s.docs.map(d=>({id:d.id, ...d.data()}))), err => console.log(err)); return ()=>unsub(); }, [user]);
+      useEffect(() => { 
+          if(!user || !db) return; 
+          const colG = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('groups');
+          const unsub = colG.onSnapshot(s => setGroups(s.docs.map(d=>({id:d.id, ...d.data()}))), err => console.log(err)); 
+          return ()=>unsub(); 
+      }, [user]);
       return (
         <div className="space-y-6 pb-24 max-w-[850px] mx-auto animate-in px-4 mt-4">
           <div className="card-social p-5 bg-white border-t-4 border-blue-500 shadow-lg text-center"><h2 className="font-black text-lg text-gray-800 uppercase italic">Grupos Bíblicos</h2></div>
+          {groups.length === 0 && (
+             <div className="text-center p-10 opacity-40">
+                <i className="fa-solid fa-users-slash text-5xl mb-4"></i>
+                <p className="font-black uppercase tracking-widest text-xs">Aún no hay grupos formados.</p>
+             </div>
+          )}
           <div className="grid grid-cols-1 gap-4">
             {groups.map(g => (
               <div key={g.id} className="card-social p-5 bg-white border border-gray-200 shadow-sm flex flex-col text-left"><h3 className="font-black text-lg text-blue-600 mb-1 uppercase tracking-tighter">#{g.name}</h3><p className="text-gray-600 text-sm mt-1">{g.desc}</p></div>
@@ -389,15 +423,26 @@
 
     function StoreView({ isAdmin, user }) {
       const [items, setItems] = useState([]);
-      const colS = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('store');
-      useEffect(() => { if(!user) return; const unsub = colS.onSnapshot(s => setItems(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>a.at-b.at)), err => console.log(err)); return ()=>unsub(); }, [user]);
+      useEffect(() => { 
+          if(!user || !db) return; 
+          const colS = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('store');
+          const unsub = colS.onSnapshot(s => setItems(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at)), err => console.log(err)); 
+          return ()=>unsub(); 
+      }, [user]);
       return (
         <div className="space-y-6 pb-24 max-w-[1050px] mx-auto px-4 mt-4 animate-in">
           <div className="card-social p-5 bg-white border-t-4 border-green-500 shadow-lg text-center"><h2 className="font-black text-lg text-gray-800 uppercase italic">Tienda Davar</h2></div>
+          {items.length === 0 && (
+             <div className="text-center p-10 opacity-40">
+                <i className="fa-solid fa-store-slash text-5xl mb-4"></i>
+                <p className="font-black uppercase tracking-widest text-xs">La tienda ministerial está vacía.</p>
+             </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             {items.map(i => (
               <div key={i.id} className="store-item bg-white rounded-xl flex flex-col border border-gray-200 shadow-sm overflow-hidden relative active:scale-95 transition-transform text-left">
-                <img src={i.img} className="h-36 w-full object-cover" />
+                {(i.uid === user?.uid || isAdmin) && <button onClick={async ()=>{ const colS = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('store'); await colS.doc(i.id).delete(); }} className="absolute top-2 right-2 text-red-500 bg-white p-1 rounded-full shadow-md"><i className="fa-solid fa-trash-can text-xs"></i></button>}
+                <img src={i.img} className="h-36 w-full object-cover" onError={(e)=>{e.target.src=LOGO_URL}} />
                 <div className="p-3 flex-1 flex flex-col">
                   <p className="text-green-700 font-black text-lg mb-1 italic font-serif">${i.price}</p>
                   <h4 className="font-bold text-gray-800 truncate text-[12px] mb-2 uppercase">{i.name}</h4>
@@ -412,15 +457,20 @@
 
     function ProfilePosts({ user }) {
       const [myPosts, setMyPosts] = useState([]);
-      const colP = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts');
-      useEffect(() => { if (!user) return; const unsub = colP.onSnapshot(s => setMyPosts(s.docs.map(d=>({id:d.id, ...d.data()})).filter(x=>x.uid === user.uid).sort((a,b)=>a.at-b.at)), err => console.log(err)); return () => unsub(); }, [user?.uid]);
+      useEffect(() => { 
+          if (!user || !db) return; 
+          const colP = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts');
+          const unsub = colP.onSnapshot(s => setMyPosts(s.docs.map(d=>({id:d.id, ...d.data()})).filter(x=>x.uid === user.uid).sort((a,b)=>b.at-a.at)), err => console.log(err)); 
+          return () => unsub(); 
+      }, [user?.uid]);
       return (
         <div className="max-w-[620px] mx-auto space-y-4 mt-6 px-1 md:px-0">
           <h3 className="font-black text-xs uppercase tracking-widest text-gray-400 text-center italic mb-3">Mi Historial Ministerial</h3>
+          {myPosts.length === 0 && <p className="text-[10px] text-gray-400 uppercase font-bold opacity-50">Aún no has compartido nada en el muro.</p>}
           {myPosts.map(p => (
             <div key={p.id} className="card-social bg-white p-4 shadow-sm border border-gray-200 flex justify-between items-start animate-up text-left">
                <div className="flex-1 text-left pr-3"><p className="text-[9px] text-[#1877F2] font-black mb-1 uppercase leading-none">{new Date(p.at).toLocaleString()}</p>{p.text && <p className="text-[13px] line-clamp-2 italic text-gray-700">"{p.text}"</p>}</div>
-               <button onClick={()=>colP.doc(p.id).delete()} className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center shadow-sm flex-shrink-0 active:scale-90 transition-transform"><i className="fa-solid fa-trash-can text-sm"></i></button>
+               <button onClick={async ()=>{ const colP = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts'); await colP.doc(p.id).delete(); }} className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center shadow-sm flex-shrink-0 active:scale-90 transition-transform"><i className="fa-solid fa-trash-can text-sm"></i></button>
             </div>
           ))}
         </div>
@@ -433,86 +483,178 @@
       const [pinIn, setPinIn] = useState(''); const [isBroadcasting, setIsBroadcasting] = useState(false); const [liveId, setLiveId] = useState(null);
       const [isAdmin, setIsAdmin] = useState(sessionStorage.getItem('davar_admin') === 'true');
       const [regName, setRegName] = useState(''); const [regPin, setRegPin] = useState('');
-      const [loadingAuth, setLoadingAuth] = useState(true);
+      const [loadingAuth, setLoadingAuth] = useState(false); 
+      const [authError, setAuthError] = useState('');
+      const [showAdminModal, setShowAdminModal] = useState(false); const [adminPwd, setAdminPwd] = useState('');
 
+      // --- VERIFICACIÓN DE FIREBASE ---
+      if (!auth || !db) {
+          return (
+              <div className="h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-6 text-center">
+                  <i className="fa-solid fa-triangle-exclamation text-5xl text-red-500 mb-4"></i>
+                  <h2 className="font-black text-xl text-gray-800 uppercase mb-2">Conexión Incompleta</h2>
+                  <p className="text-gray-600 text-sm">El Arca no pudo encontrar la configuración de la base de datos (Firebase).</p>
+              </div>
+          );
+      }
+
+      // --- AUTENTICACIÓN MEJORADA (PRIVACIDAD ESTRICTA) ---
       useEffect(() => {
         let unsub = null;
-        auth.signInAnonymously().catch(()=>setLoadingAuth(false));
+        const initAuth = async () => {
+          try { await auth.signInAnonymously(); } catch(e) { setLoadingAuth(false); }
+        };
+        initAuth();
+
         const unsubAuth = auth.onAuthStateChanged((cur) => {
           if (cur) {
              setUser(cur);
              unsub = db.collection('artifacts').doc(appId).collection('users').doc(cur.uid).collection('profile').doc('data').onSnapshot(pDoc => {
-                if(pDoc.exists) { setProfile(pDoc.data()); } else { setProfile(null); }
+                if(pDoc.exists) { 
+                    setProfile(pDoc.data()); 
+                    if(sessionStorage.getItem('davar_unlocked') === 'true') { setUnlocked(true); }
+                } else { setProfile(null); }
                 setLoadingAuth(false);
-             }, err => { setLoadingAuth(false); });
-          } else { setLoadingAuth(false); }
+             }, err => { 
+                setAuthError("Verifique la seguridad de su servidor.");
+                setLoadingAuth(false); 
+             });
+          } else { 
+             setLoadingAuth(false); 
+          }
         });
         return () => { unsubAuth(); if (unsub) unsub(); };
       }, []);
 
       const handleRegister = async (e) => {
         e.preventDefault(); 
-        if (!regName.trim() || !regPin.trim() || !user) {
-            alert("Espere a que la conexión ministerial sea sólida.");
-            return;
+        setAuthError('');
+
+        if (!regName.trim() || !regPin.trim()) {
+            setAuthError("⚠️ Llene su nombre y PIN, por favor."); 
+            return; 
         }
-        const p={uid:user.uid, name:regName.trim(), pin:regPin.trim(), photo:LOGO_URL, cover:DEFAULT_COVER, at:Date.now()};
-        await db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('profile').doc('data').set(p);
-        setUnlocked(true); sessionStorage.setItem('davar_unlocked', 'true');
+        
+        setLoadingAuth(true); 
+
+        try {
+            let activeUser = user;
+            if (!activeUser) { 
+                const cred = await auth.signInAnonymously();
+                activeUser = cred.user;
+                setUser(activeUser);
+            }
+            
+            const p={uid:activeUser.uid, name:regName.trim(), pin:regPin.trim(), photo:LOGO_URL, cover:DEFAULT_COVER, at:Date.now()};
+            await db.collection('artifacts').doc(appId).collection('users').doc(activeUser.uid).collection('profile').doc('data').set(p);
+            
+            setProfile(p); 
+            setUnlocked(true); 
+            sessionStorage.setItem('davar_unlocked', 'true');
+            setLoadingAuth(false);
+        } catch(err) { 
+            setLoadingAuth(false);
+            console.error(err);
+            if(err.code === 'auth/operation-not-allowed') {
+                setAuthError("⚠️ Falta habilitar el acceso 'Anónimo' en Firebase.");
+            } else if (err.code === 'permission-denied') {
+                setAuthError("⚠️ Error de permisos en la ruta privada.");
+            } else {
+                setAuthError("⚠️ Error del servidor: " + err.message); 
+            }
+        }
       };
 
-      if (loadingAuth) return <div className="h-screen bg-[#F0F2F5] flex flex-col items-center justify-center animate-in"><div className="logo-cd mb-6 shadow-2xl scale-125"><span className="initials">CD</span><span className="sub-text">Dios</span></div><p className="text-[#1877F2] font-black uppercase tracking-widest italic animate-pulse text-[10px]">Abriendo Aposento...</p></div>;
+      const handleLogin = (e) => {
+        e.preventDefault();
+        setAuthError('');
+        if(pinIn === profile.pin) { setUnlocked(true); sessionStorage.setItem('davar_unlocked','true'); } 
+        else { setAuthError("⚠️ El PIN ingresado es incorrecto."); }
+      };
+
+      if (loadingAuth) return <div className="h-screen bg-[#F0F2F5] flex flex-col items-center justify-center animate-in"><div className="logo-cd mb-6 shadow-2xl scale-125"><span className="initials">CD</span><span className="sub-text">Dios</span></div><p className="text-[#1877F2] font-black uppercase tracking-widest italic animate-pulse text-[10px]">Conectando al Aposento...</p></div>;
       
-      if (profile && !isUnlocked) return ( <div className="h-screen flex items-center justify-center p-6 bg-[#F0F2F5]"><div className="card-social p-10 w-full max-w-sm text-center border-t-4 border-[#1877F2] shadow-2xl bg-white animate-up"><img src={profile.photo || LOGO_URL} className="w-24 h-24 mx-auto mb-4 rounded-full border-4 border-[#1877F2] object-cover shadow-xl" /><h2 className="font-black text-gray-800 uppercase tracking-widest leading-none mb-1 text-xl">{profile.name}</h2><p className="text-gray-500 text-[10px] uppercase font-black mb-8 italic opacity-60">Sello de Seguridad</p><form onSubmit={(e)=>{e.preventDefault(); if(pinIn===profile.pin) { setUnlocked(true); sessionStorage.setItem('davar_unlocked','true'); } else alert("PIN Incorrecto");}} className="space-y-6"><input type="password" placeholder="PIN" value={pinIn} onChange={e=>setPinIn(e.target.value)} className="input-pill bg-gray-50 border border-gray-200 text-center text-3xl font-black tracking-[0.5em] outline-none shadow-inner h-16 w-full" required autoFocus /><button type="submit" className="w-full bg-[#1877F2] text-white font-black py-4 rounded-xl shadow-lg active:scale-95 transition-all uppercase tracking-widest h-14 text-[13px]">Entrar</button></form></div></div> );
+      if (!profile || !isUnlocked) return ( 
+        <div className="h-screen flex items-center justify-center p-6 bg-[#F0F2F5]">
+            <div className="card-social p-10 w-full max-w-sm text-center border-t-4 border-[#1877F2] shadow-2xl bg-white animate-up">
+                {!profile ? (
+                    <>
+                        <h3 className="mb-3 font-black text-gray-800 uppercase tracking-widest text-lg text-center leading-none">Únete a la Familia</h3>
+                        <form onSubmit={handleRegister} className="space-y-4 text-left">
+                            <div><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Nombre Ministerial</label><input type="text" value={regName} onChange={e=>setRegName(e.target.value)} className="input-pill bg-gray-50 border shadow-inner mt-1 h-12 text-sm font-bold w-full outline-none px-4" required /></div>
+                            <div><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Crear PIN (Números)</label><input type="password" value={regPin} onChange={e=>setRegPin(e.target.value)} className="input-pill bg-gray-50 border text-center text-lg font-black tracking-[0.5em] shadow-inner mt-1 h-12 w-full outline-none" required /></div>
+                            {authError && <div className="bg-red-50 text-red-500 p-2 rounded-lg text-[10px] font-bold text-center animate-pulse border border-red-200">{authError}</div>}
+                            <button type="submit" className="w-full bg-[#1877F2] text-white font-black py-4 rounded-xl shadow-lg active:scale-95 uppercase text-[11px] tracking-widest mt-2">Ingresar Perfil</button>
+                        </form>
+                    </>
+                ) : (
+                    <>
+                        <img src={profile.photo} onError={(e)=>{e.target.src=LOGO_URL}} className="w-24 h-24 mx-auto mb-4 rounded-full border-4 border-[#1877F2] object-cover shadow-xl" />
+                        <h2 className="font-black text-gray-800 uppercase tracking-widest mb-1 text-xl leading-none">{profile.name}</h2>
+                        <p className="text-gray-500 text-[10px] uppercase font-black mb-6 italic opacity-60 text-center tracking-widest leading-none">Sello Ministerial (PIN)</p>
+                        <form onSubmit={handleLogin} className="space-y-4">
+                            <input type="password" placeholder="PIN" value={pinIn} onChange={e=>setPinIn(e.target.value)} className="input-pill bg-gray-50 border border-gray-200 text-center text-3xl font-black tracking-[0.5em] outline-none shadow-inner h-16 w-full" required autoFocus />
+                            {authError && <div className="bg-red-50 text-red-500 p-2 rounded-lg text-xs font-bold animate-pulse border border-red-200">{authError}</div>}
+                            <button type="submit" className="w-full bg-[#1877F2] text-white font-black py-4 rounded-xl shadow-lg active:scale-95 transition-all uppercase tracking-widest h-14 text-[13px]">Entrar</button>
+                        </form>
+                    </>
+                )}
+            </div>
+        </div> 
+      );
 
       return (
         <div className="h-screen flex flex-col overflow-hidden bg-[#F0F2F5]">
-          {!profile && <GuestBanner user={user} />}
           <header className="header-fb">
             <div onClick={()=>setTab('feed')} className="flex items-center gap-2 cursor-pointer transition-transform flex-shrink-0">
-               <div onClick={(e) => { e.stopPropagation(); const pwd = prompt("Clave de Jerarquía:"); if(pwd==="davar2026") { setIsAdmin(true); sessionStorage.setItem('davar_admin','true'); } }} className="logo-cd scale-90"><span className="initials">CD</span><span className="sub-text">Dios</span></div>
-               <span className="font-black text-[#1877F2] uppercase tracking-tighter italic text-[14px] ml-1 leading-none">Comunidad Davar {isAdmin && <span className="text-red-500 text-[8px] block">(Admin)</span>}</span>
+               {/* MODAL DE ADMIN INTEGRADO */}
+               <div onClick={(e) => { e.stopPropagation(); setShowAdminModal(true); }} className="logo-cd scale-90"><span className="initials">CD</span><span className="sub-text">Dios</span></div>
+               <span className="font-black text-[#1877F2] uppercase tracking-tighter italic text-[14px] ml-1 leading-none text-balance">Comunidad Davar {isAdmin && <span className="text-red-500 text-[8px] block">(Admin)</span>}</span>
             </div>
-            <div onClick={()=>{sessionStorage.clear(); window.location.reload();}} className="btn-circle-action bg-red-50 text-red-500 border-none w-10 h-10 shadow-sm" title="Salir"><i className="fa-solid fa-power-off text-sm"></i></div>
+            <div onClick={()=>{sessionStorage.clear(); window.location.reload();}} className="btn-circle-action bg-red-50 text-red-500 border-none w-10 h-10 shadow-sm shadow-red-200" title="Salir"><i className="fa-solid fa-power-off text-sm"></i></div>
           </header>
 
-          <main id="main-scroller" className="flex-1 overflow-y-auto custom-scrollbar pt-[65px] pb-24 scroll-smooth">
-             <div className={`w-full max-w-[650px] mx-auto transition-all`}>
-                {tab==='feed' && <WallView user={user} profile={profile} isAdmin={isAdmin} onStartLive={()=>setIsBroadcasting(true)} onJoinLive={id=>setLiveId(id)} />}
-                {tab==='chat' && <div className="h-[84vh] animate-up shadow-xl rounded-xl overflow-hidden border border-gray-200 bg-white mx-2"><ChatPanel user={user} profile={profile} isAdmin={isAdmin} /></div>}
-                {tab==='devs' && <DevotionalsView />}
-                {tab==='groups' && <GroupView user={user} profile={profile} />}
-                {tab==='store' && <StoreView isAdmin={isAdmin} user={user} />}
-                {tab==='profile' && (
-                  !profile ? (
-                    <div className="card-social p-8 max-sm mx-auto mt-8 text-center shadow-2xl animate-in bg-white border-t-4 border-blue-500">
-                      <h3 className="mb-3 font-black text-gray-800 uppercase tracking-widest text-lg text-center leading-none">Únete a la Familia</h3>
-                      <form onSubmit={handleRegister} className="space-y-5 text-left">
-                        <div><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Nombre Ministerial</label><input type="text" value={regName} onChange={e=>setRegName(e.target.value)} className="input-pill bg-gray-50 border shadow-inner mt-1 h-12 text-sm font-bold w-full outline-none" required /></div>
-                        <div><label className="text-[10px] font-black uppercase text-gray-400 ml-2">Crear PIN (Números)</label><input type="password" value={regPin} onChange={e=>setRegPin(e.target.value)} className="input-pill bg-gray-50 border text-center text-lg font-black tracking-[0.5em] shadow-inner mt-1 h-12 w-full outline-none" required /></div>
-                        <button type="submit" className="w-full bg-[#1877F2] text-white font-black py-4 rounded-xl shadow-lg active:scale-95 uppercase text-[11px] tracking-widest">Sellar Perfil</button>
-                      </form>
+          {/* VENTANA DE ADMIN SIN BLOQUEOS */}
+          {showAdminModal && (
+            <div className="fixed inset-0 bg-black/80 z-[6000] flex items-center justify-center p-4 animate-in">
+                <div className="bg-[#242526] p-6 rounded-2xl w-full max-w-sm border border-[#D4AF37] shadow-2xl">
+                    <h3 className="text-[#D4AF37] font-black mb-4 uppercase tracking-widest text-center text-sm">Jerarquía Mayor</h3>
+                    <input type="password" value={adminPwd} onChange={e=>setAdminPwd(e.target.value)} className="w-full bg-[#1a1a1b] p-3 rounded-xl text-white outline-none mb-6 text-center tracking-widest" placeholder="Clave..." />
+                    <div className="flex gap-3">
+                        <button onClick={()=>setShowAdminModal(false)} className="flex-1 bg-gray-600 text-white py-3 rounded-xl font-bold text-xs uppercase">Cancelar</button>
+                        <button onClick={()=>{ if(adminPwd==="davar2026"){setIsAdmin(true); sessionStorage.setItem('davar_admin','true'); setShowAdminModal(false);} else { setAdminPwd(''); } }} className="flex-1 bg-[#D4AF37] text-black py-3 rounded-xl font-black text-xs uppercase shadow-lg">Confirmar</button>
                     </div>
-                  ) : (
-                    <div className="space-y-4 mt-3 pb-10 px-2 text-center">
+                </div>
+            </div>
+          )}
+
+          <main id="main-scroller" className="flex-1 overflow-y-auto custom-scrollbar pt-[65px] pb-24 scroll-smooth px-2">
+             <div className={`w-full max-w-[650px] mx-auto transition-all px-2`}>
+                {tab==='feed' && <WallView user={user} profile={profile} isAdmin={isAdmin} onStartLive={()=>setIsBroadcasting(true)} onJoinLive={id=>setLiveId(id)} />}
+                {tab==='chat' && <ChatPanel user={user} profile={profile} isAdmin={isAdmin} />}
+                {tab==='wisdom' && <div className="h-[78vh] flex flex-col card-fb overflow-hidden border-t-4 border-blue-500 animate-up bg-white shadow-xl mt-4"><div className="p-10 text-center flex flex-col items-center justify-center flex-1"><i className="fa-solid fa-scroll text-5xl text-[#D4AF37] mb-6 animate-bounce"></i><h2 className="text-2xl font-black text-gray-800 uppercase tracking-tighter mb-4 italic leading-tight text-center text-balance text-wrap">Sabiduría Ministerial</h2><p className="text-gray-500 text-sm leading-relaxed text-center">Aposento sagrado para la guía espiritual ministerial.</p></div></div>}
+                {tab==='groups' && <GroupView user={user} />}
+                {tab==='store' && <StoreView isAdmin={isAdmin} user={user} />}
+                {tab==='devs' && <DevotionalsView />}
+                {tab==='profile' && (
+                    <div className="space-y-4 mt-3 pb-10 text-center">
                       <div className="card-social overflow-hidden animate-in shadow-xl bg-white border-t-4 border-[#1877F2] pb-6">
                         <div className="relative h-40 bg-gray-200 shadow-inner">
-                          <img src={profile.cover || DEFAULT_COVER} className="profile-banner h-full w-full object-cover" />
-                          <button onClick={()=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=async(e)=>{const r=await optimizeMedia(e.target.files[0]); await db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('profile').doc('data').update({cover:r});};i.click();}} className="absolute bottom-2 right-2 bg-white/80 backdrop-blur-md p-2 rounded-lg text-gray-800 shadow cursor-pointer"><i className="fa-solid fa-camera"></i></button>
+                          <img src={profile.cover || DEFAULT_COVER} className="h-full w-full object-cover" />
+                          <button onClick={()=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=async(e)=>{const r=await optimizeMedia(e.target.files[0]); await db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('profile').doc('data').update({cover:r});};i.click();}} className="absolute bottom-2 right-2 bg-black/50 p-2 rounded-lg text-white shadow-lg active:scale-110 transition-transform"><i className="fa-solid fa-camera"></i></button>
                         </div>
                         <div className="p-4 pt-0 flex flex-col items-center">
-                          <div className="avatar-view shadow-lg">
-                            <img src={profile.photo || LOGO_URL} className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-inner" />
+                          <div className="mt-[-50px] relative inline-block">
+                            <img src={profile.photo || LOGO_URL} onError={(e)=>{e.target.src=LOGO_URL}} className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-inner" />
                             <button onClick={()=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=async(e)=>{const r=await optimizeMedia(e.target.files[0]); await db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('profile').doc('data').update({photo:r});};i.click();}} className="absolute bottom-1 right-1 bg-[#1877F2] p-2.5 rounded-full text-white shadow-lg active:scale-125 transition-transform"><i className="fa-solid fa-camera text-xs"></i></button>
                           </div>
                           <h2 className="font-black text-2xl mt-4 text-gray-900 tracking-tight uppercase italic leading-none">{profile.name}</h2>
-                          <p className="text-[11px] text-gray-500 mt-1 font-black tracking-widest uppercase italic">Siervo Davar</p>
-                          <button onClick={()=>setTab('feed')} className="w-full max-w-[280px] mt-6 bg-[#1877f2] text-white font-black py-3 rounded-xl shadow-md uppercase text-[10px] tracking-widest active:scale-95 transition-all">Ir al Muro</button>
+                          <p className="text-[11px] text-gray-500 mt-1 font-black tracking-widest uppercase italic leading-none">Siervo Davar</p>
+                          <button onClick={()=>setTab('feed')} className="w-full max-w-[280px] mt-6 bg-[#1877f2] text-white font-black py-3 rounded-xl shadow-md uppercase text-[10px] tracking-widest active:scale-95 transition-all shadow-blue-200">Regresar al Muro</button>
                         </div>
                       </div>
                       <ProfilePosts user={user} />
                     </div>
-                  )
                 )}
              </div>
           </main>
@@ -520,21 +662,22 @@
           <nav className="nav-bottom">
              <button onClick={()=>setTab('feed')} className={`nav-btn ${tab==='feed'?'active':''}`}><i className="fa-solid fa-house"></i><span>Inicio</span></button>
              <button onClick={()=>setTab('chat')} className={`nav-btn ${tab==='chat'?'active':''}`}><i className="fa-solid fa-comments"></i><span>Chat</span></button>
-             <button onClick={()=>setTab('devs')} className={`nav-btn ${tab==='devs'?'active':''}`}><i className="fa-solid fa-book-open"></i><span>Prédica</span></button>
+             <button onClick={()=>setTab('wisdom')} className={`nav-btn ${tab==='wisdom'?'active':''}`}><i className="fa-solid fa-sparkles"></i><span>Sabiduría</span></button>
              <button onClick={()=>setTab('groups')} className={`nav-btn ${tab==='groups'?'active':''}`}><i className="fa-solid fa-users-rectangle"></i><span>Grupos</span></button>
              <button onClick={()=>setTab('store')} className={`nav-btn ${tab==='store'?'active':''}`}><i className="fa-solid fa-store"></i><span>Tienda</span></button>
+             <button onClick={()=>setTab('devs')} className={`nav-btn ${tab==='devs'?'active':''}`}><i className="fa-solid fa-book-open"></i><span>Prédica</span></button>
              <button onClick={()=>setTab('profile')} className={`nav-btn ${tab==='profile'?'active':''}`}><i className="fa-solid fa-circle-user"></i><span>Perfil</span></button>
           </nav>
           
-          {isBroadcasting && <LiveOverlay user={user} profile={profile} bId={user.uid} isBroadcaster={true} onClose={()=>setIsBroadcasting(false)} />}
-          {liveId && <LiveOverlay user={user} profile={profile} bId={liveId} isBroadcaster={false} onClose={()=>setLiveId(null)} />}
+          {isBroadcasting && user?.uid && <LiveOverlay profile={profile} broadcasterId={user.uid} isBroadcaster={true} onClose={()=>setIsBroadcasting(false)} />}
+          {liveId && <LiveOverlay profile={profile} broadcasterId={liveId} isBroadcaster={false} onClose={()=>setLiveId(null)} />}
         </div>
       );
     }
 
-    const domContainer = document.getElementById('root');
-    const rootReact = ReactDOM.createRoot(domContainer);
-    rootReact.render(<App />);
+    const domNode = document.getElementById('root');
+    const rootInstance = ReactDOM.createRoot(domNode);
+    rootInstance.render(<App />);
   </script>
 </body>
 </html>
