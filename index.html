@@ -24,6 +24,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
   <style>
+    /* Restauración del Tema Blanco y Azul Estilo Facebook */
     :root { --fb-blue: #1877F2; --fb-bg: #F0F2F5; --fb-white: #FFFFFF; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--fb-bg); margin: 0; color: #1C1E21; overflow: hidden; height: 100vh; }
     
@@ -142,83 +143,48 @@
       return <a href={url} target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-xl border border-blue-100 block text-blue-600 font-bold truncate text-[11px] mb-2"><i className="fa-solid fa-link mr-2"></i> Abrir contenido externo</a>;
     };
 
-    // --- SESIÓN EN VIVO CORREGIDA (SIN PAUSA, PARA EVITAR PANTALLA NEGRA) ---
+    // --- SESIÓN EN VIVO DIRECTA Y SIN PANTALLAS PREVIAS ---
     const LiveSession = ({ profile, broadcasterId, isBroadcaster, onClose }) => {
       const roomName = `DavarMinisterio_${broadcasterId}`;
-      const [isLive, setIsLive] = useState(!isBroadcaster); 
-      const [camStatus, setCamStatus] = useState('idle'); 
-      const videoRef = useRef(null);
-      const streamRef = useRef(null);
-
-      const requestCamera = async () => {
-         try {
-             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
-             streamRef.current = stream;
-             if (videoRef.current) videoRef.current.srcObject = stream;
-             setCamStatus('granted');
-         } catch(e) {
-             console.error("Error de cámara:", e);
-             setCamStatus('denied');
-         }
-      };
-
-      useEffect(() => {
-        return () => {
-          if (streamRef.current) {
-            streamRef.current.getTracks().forEach(t => t.stop());
-          }
-          if (isBroadcaster && db && isLive) {
-              db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').doc(broadcasterId).delete();
-          }
-        };
-      }, [isLive]);
-
-      const startStream = () => {
-         // 1. Apagamos la cámara local para soltar el hardware
-         if (streamRef.current) {
-             streamRef.current.getTracks().forEach(t => t.stop());
-             streamRef.current = null;
-         }
-         if (videoRef.current) {
-             videoRef.current.srcObject = null;
-         }
-         
-         // 2. Encendemos el vivo INMEDIATAMENTE de forma síncrona.
-         // Al quitar la pausa, el celular reconoce que usted tocó el botón
-         // y le entrega la cámara a Jitsi sin bloquearse en negro.
-         setIsLive(true);
-         
-         if (db) {
-             db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').doc(broadcasterId).set({ 
-                 uid: broadcasterId, 
-                 name: profile?.name || "Visitante", 
-                 photo: profile?.photo || LOGO_URL, 
-                 at: Date.now() 
-             });
-         }
-      };
-
-      const stopStream = async () => {
-         if (isBroadcaster && isLive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').doc(broadcasterId).delete();
-         onClose();
-      };
-
-      // Funciones del Chat Integrado
       const [chatMsgs, setChatMsgs] = useState([]);
       const [newMsg, setNewMsg] = useState('');
       const chatEndRef = useRef(null);
+
+      let liveCol = db ? db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives') : null;
       let chatCol = db ? db.collection('artifacts').doc(appId).collection('public').doc('data').collection('live_chats').doc(broadcasterId).collection('messages') : null;
 
       useEffect(() => {
-        if (chatCol && isLive) {
-            const unsubChat = chatCol.orderBy('at', 'asc').limitToLast(40).onSnapshot(s => {
+        // Al montar, si es el que transmite, crea el documento de inmediato.
+        if (isBroadcaster && liveCol) {
+          liveCol.doc(broadcasterId).set({ 
+             uid: broadcasterId, 
+             name: profile?.name || "Visitante", 
+             photo: profile?.photo || LOGO_URL, 
+             at: Date.now() 
+          });
+        }
+        
+        let unsubChat = () => {};
+        if (chatCol) {
+            unsubChat = chatCol.orderBy('at', 'asc').limitToLast(40).onSnapshot(s => {
                 setChatMsgs(s.docs.map(d => ({id: d.id, ...d.data()})));
             });
-            return () => unsubChat();
         }
-      }, [isLive]);
+
+        return () => {
+            unsubChat();
+            if (isBroadcaster && liveCol) {
+                liveCol.doc(broadcasterId).delete();
+            }
+        };
+      }, []);
 
       useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMsgs]);
+
+      const stopStream = async () => {
+         if (isBroadcaster && liveCol) await liveCol.doc(broadcasterId).delete();
+         onClose();
+      };
 
       const sendMsg = () => {
           if(!newMsg.trim() || !chatCol) return;
@@ -234,96 +200,50 @@
       return (
         <div className="live-overlay animate-in z-[6000]">
           <div className="flex-1 bg-black relative flex flex-col items-center justify-center overflow-hidden">
-            
-            {/* PANTALLA DE PREPARACIÓN PARA EL LOCUTOR */}
-            {!isLive && isBroadcaster && (
-               <>
-                 <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover opacity-50"></video>
-                 <div className="z-10 bg-black/80 p-8 rounded-3xl backdrop-blur-md border border-white/20 text-center shadow-2xl max-w-sm mx-4">
-                    <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl border-4 ${camStatus === 'granted' ? 'bg-green-600 border-green-400' : 'bg-gray-800 border-[#1877F2]'}`}>
-                        <i className={`fa-solid ${camStatus === 'granted' ? 'fa-video' : 'fa-video-slash'} text-3xl text-white`}></i>
-                    </div>
-                    <h2 className="text-white font-black text-2xl uppercase tracking-widest mb-2">Cámara Lista</h2>
-                    <p className="text-gray-300 text-xs mb-6 leading-relaxed">
-                        {camStatus === 'idle' ? 'Permita el acceso a la cámara para verse antes de transmitir.' : 
-                         camStatus === 'granted' ? 'Imagen lista. Presione iniciar para compartir la bendición.' : 
-                         'No se detectó cámara, pero aún puede intentar iniciar la transmisión.'}
-                    </p>
-                    
-                    {camStatus === 'idle' && (
-                        <button onClick={requestCamera} className="bg-[#1877F2] text-white font-black w-full py-4 rounded-xl shadow-lg active:scale-95 transition-transform text-sm uppercase mb-4">
-                            1. Permitir Cámara
-                        </button>
-                    )}
 
-                    <button onClick={startStream} className={`${camStatus === 'idle' ? 'bg-gray-600' : 'bg-green-500 shadow-[0_0_30px_rgba(34,197,94,0.5)]'} text-white font-black w-full py-4 rounded-xl active:scale-95 transition-transform text-sm uppercase flex items-center justify-center gap-2`}>
-                        <i className="fa-solid fa-play text-lg"></i> 2. Iniciar Vivo
-                    </button>
-                    
-                    <button onClick={onClose} className="mt-6 text-gray-400 font-bold uppercase text-[10px] active:scale-90 tracking-widest">Cancelar y Salir</button>
-                 </div>
-               </>
-            )}
-
-            {/* PANTALLA DE CARGA MIENTRAS JITSI CONECTA */}
-            {isLive && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-0">
-                    <i className="fa-solid fa-spinner fa-spin text-5xl text-[#1877F2] mb-4"></i>
-                    <p className="text-white font-bold text-sm tracking-widest uppercase animate-pulse">Conectando Transmisión...</p>
-                </div>
-            )}
-
-            {/* TRANSMISIÓN EN VIVO REAL (JITSI) */}
-            {isLive && (
-                <iframe src={`https://meet.jit.si/${roomName}#config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.disableDeepLinking=true&config.prejoinPageEnabled=false`} className="w-full h-full border-none relative z-10" allow="camera; microphone; fullscreen; display-capture; autoplay" />
-            )}
+            {/* TRANSMISIÓN EN VIVO REAL (JITSI ABRE DE INMEDIATO) */}
+            <iframe src={`https://meet.jit.si/${roomName}#config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.disableDeepLinking=true&config.prejoinPageEnabled=false`} className="absolute inset-0 w-full h-full border-none z-10" allow="camera; microphone; fullscreen; display-capture; autoplay" />
 
             {/* ENCABEZADO DURANTE EL VIVO */}
-            {isLive && (
-                <div className="absolute top-10 left-6 flex items-center gap-3 bg-black/80 p-2 pr-5 rounded-full backdrop-blur-md border border-white/20 shadow-lg z-20">
-                   <img src={profile?.photo || LOGO_URL} className="h-10 w-10 rounded-full border-2 border-[#1877F2] object-cover bg-white" onError={(e)=>{e.target.src=LOGO_URL}} />
-                   <div>
-                      <p className="text-white font-black text-xs uppercase leading-none">{profile?.name || "Visitante"}</p>
-                      <p className="text-red-500 text-[9px] font-black mt-1 animate-pulse">● EN VIVO</p>
-                   </div>
-                </div>
-            )}
+            <div className="absolute top-10 left-6 flex items-center gap-3 bg-black/80 p-2 pr-5 rounded-full backdrop-blur-md border border-white/20 shadow-lg z-20">
+               <img src={profile?.photo || LOGO_URL} className="h-10 w-10 rounded-full border-2 border-[#1877F2] object-cover bg-white" onError={(e)=>{e.target.src=LOGO_URL}} />
+               <div>
+                  <p className="text-white font-black text-xs uppercase leading-none">{profile?.name || "Visitante"}</p>
+                  <p className="text-red-500 text-[9px] font-black mt-1 animate-pulse">● EN VIVO</p>
+               </div>
+            </div>
             
             {/* CHAT EN VIVO TRANSPARENTE */}
-            {isLive && (
-                <>
-                <div className="live-chat-overlay no-scrollbar z-20">
-                    {chatMsgs.map(m => (
-                        <div key={m.id} className="live-chat-msg">
-                            <span className="font-black text-[#1877F2] opacity-90">{m.authorName}: </span>
-                            <span className="font-medium text-white">{m.text}</span>
-                        </div>
-                    ))}
-                    <div ref={chatEndRef} />
-                </div>
-                <div className="live-chat-input-area z-20">
-                    <input type="text" value={newMsg} onChange={e=>setNewMsg(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendMsg()} placeholder="Escriba un amén..." className="flex-1 bg-black/60 text-white placeholder-gray-300 px-5 py-3 rounded-full outline-none border border-white/20 backdrop-blur-md text-[14px] shadow-lg" />
-                    <button onClick={sendMsg} className="w-12 h-12 bg-[#1877F2] text-white rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-lg border border-blue-400 shrink-0">
-                        <i className="fa-solid fa-paper-plane"></i>
-                    </button>
-                </div>
-                </>
-            )}
+            <div className="live-chat-overlay no-scrollbar z-20">
+                {chatMsgs.map(m => (
+                    <div key={m.id} className="live-chat-msg">
+                        <span className="font-black text-[#1877F2] opacity-90">{m.authorName}: </span>
+                        <span className="font-medium text-white">{m.text}</span>
+                    </div>
+                ))}
+                <div ref={chatEndRef} />
+            </div>
+            
+            {/* CAJA DE TEXTO DEL CHAT */}
+            <div className="live-chat-input-area z-20">
+                <input type="text" value={newMsg} onChange={e=>setNewMsg(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendMsg()} placeholder="Escriba un amén..." className="flex-1 bg-black/60 text-white placeholder-gray-300 px-5 py-3 rounded-full outline-none border border-white/20 backdrop-blur-md text-[16px] shadow-lg" />
+                <button onClick={sendMsg} className="w-12 h-12 bg-[#1877F2] text-white rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-lg border border-blue-400 shrink-0">
+                    <i className="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
 
-            {/* BOTÓN PARA FINALIZAR EL VIVO */}
-            {isLive && (
-                <div className="live-controls-side z-20">
-                  {isBroadcaster ? (
-                      <button onClick={stopStream} className="btn-circle-mini bg-red-600 text-white shadow-2xl animate-pulse ring-4 ring-red-600/30" title="Finalizar Transmisión">
-                          <i className="fa-solid fa-phone-slash text-2xl"></i>
-                      </button>
-                  ) : (
-                      <button onClick={stopStream} className="btn-circle-mini bg-gray-200 text-gray-800 shadow-xl" title="Salir de la transmisión">
-                          <i className="fa-solid fa-xmark text-2xl"></i>
-                      </button>
-                  )}
-                </div>
-            )}
+            {/* BOTÓN ROJO PARA FINALIZAR EL VIVO */}
+            <div className="absolute right-4 bottom-[80px] z-20 flex flex-col gap-4">
+              {isBroadcaster ? (
+                  <button onClick={stopStream} className="btn-circle-mini bg-red-600 text-white shadow-2xl animate-pulse ring-4 ring-red-600/30" title="Finalizar Transmisión">
+                      <i className="fa-solid fa-phone-slash text-2xl"></i>
+                  </button>
+              ) : (
+                  <button onClick={stopStream} className="btn-circle-mini bg-gray-200 text-gray-800 shadow-xl" title="Salir de la transmisión">
+                      <i className="fa-solid fa-xmark text-2xl"></i>
+                  </button>
+              )}
+            </div>
           </div>
         </div>
       );
@@ -480,7 +400,6 @@
               </div>
           </div>
           
-          {/* PANEL DE NUEVA PUBLICACIÓN CON TODAS LAS OPCIONES */}
           {isPostDialogOpen && (
           <div className="card-fb p-5 border-2 border-[#1877F2] animate-in shadow-2xl relative bg-white z-50 mb-4 mx-2 sm:mx-0">
              <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-2"><h3 className="font-bold text-gray-800 text-[12px] uppercase italic">Nueva Bendición</h3><i onClick={closeDialog} className="fa-solid fa-xmark cursor-pointer p-2 bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-200"></i></div>
@@ -579,6 +498,8 @@
       );
     }
 
+    // --- NUEVOS FORMULARIOS DE AÑADIR (SABIDURÍA, GRUPOS, TIENDA, PRÉDICAS) ---
+
     function ChatPanel({ user, profile, isUnlocked, isAdmin }) {
       if (!user) return null;
       const [msgs, setMsgs] = useState([]); const [txt, setTxt] = useState('');
@@ -594,8 +515,10 @@
       }, [user]);
       useEffect(() => { endRef.current?.scrollIntoView({behavior:'smooth'}); }, [msgs]);
       const send = async () => { if(!txt.trim() || !profile || !isUnlocked || !col) return; await col.add({uid:user.uid, name:profile.name, text:txt.trim(), photo:profile.photo || LOGO_URL, at:Date.now()}); setTxt(''); };
+      
+      // EL MILAGRO DE LA MEDIDA EXACTA: Se ajusta al celular para que no se esconda abajo
       return (
-        <div className="h-full flex flex-col card-fb overflow-hidden animate-up bg-white border-t-4 border-[#1877F2] shadow-2xl mt-2 mx-2">
+        <div className="flex flex-col card-fb overflow-hidden animate-up bg-white border-t-4 border-[#1877F2] shadow-2xl mx-2 sm:mx-auto max-w-[650px] mt-2" style={{ height: 'calc(100vh - 160px)' }}>
           <div className="p-3 border-b text-center font-black text-gray-500 text-[10px] uppercase bg-gray-50 shadow-sm italic tracking-widest leading-none">Chat Ministerial</div>
           <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50/50 custom-scrollbar">
             {msgs.length === 0 && <div className="text-center mt-10 opacity-40"><i className="fa-solid fa-comments text-4xl mb-2 text-gray-400"></i><p className="text-[10px] font-black uppercase text-gray-500">Sin mensajes aún.</p></div>}
@@ -611,101 +534,199 @@
             ))}
             <div ref={endRef} />
           </div>
-          <div className="p-3 bg-white flex gap-2 border-t shadow-inner">
+          <div className="p-3 bg-white flex gap-2 border-t shadow-inner shrink-0">
             {(!profile || !isUnlocked) ? <div className="w-full text-center text-[11px] text-red-500 font-black p-3 bg-red-50 rounded-xl border border-red-100">INGRESE A PERFIL PARA CHATEAR</div> : 
-              <><input type="text" value={txt} onChange={e=>setTxt(e.target.value)} placeholder="Escriba aquí..." className="flex-1 bg-gray-100 rounded-full px-5 text-[16px] outline-none border border-gray-200 shadow-inner text-gray-800" onKeyDown={e=>e.key==='Enter'&&send()} /><button onClick={send} className="w-10 h-10 rounded-full bg-[#1877F2] text-white flex items-center justify-center active:scale-90 shadow-md transition-transform"><i className="fa-solid fa-paper-plane text-lg"></i></button></>
+              <><input type="text" value={txt} onChange={e=>setTxt(e.target.value)} placeholder="Escriba aquí..." className="flex-1 bg-gray-100 rounded-full px-5 text-[16px] outline-none border border-gray-200 shadow-inner text-gray-800" onKeyDown={e=>e.key==='Enter'&&send()} /><button onClick={send} className="w-12 h-12 shrink-0 rounded-full bg-[#1877F2] text-white flex items-center justify-center active:scale-90 shadow-md transition-transform"><i className="fa-solid fa-paper-plane text-lg"></i></button></>
             }
           </div>
         </div>
       );
     }
 
-    function DevotionalsView() {
-      const [devs, setDevs] = useState([]);
-      let colDev;
-      if (db) {
-          colDev = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('devotionals');
-      }
+    function WisdomView({ user, profile, isUnlocked, isAdmin }) {
+      const [items, setItems] = useState([]);
+      const [showForm, setShowForm] = useState(false);
+      const [title, setTitle] = useState('');
+      const [content, setContent] = useState('');
+
       useEffect(() => { 
-          if(!colDev) return;
-          const unsub = colDev.onSnapshot(s => setDevs(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at)), err => console.log(err)); return ()=>unsub(); 
+          if(!db) return;
+          const unsub = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('wisdom').onSnapshot(s => setItems(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at)), err => console.log(err)); 
+          return ()=>unsub(); 
       }, []);
+
+      const handleAdd = async () => {
+          if(!title.trim() || !content.trim() || !user || !profile) return;
+          await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('wisdom').add({
+              title, content, uid: user.uid, authorName: profile.name, at: Date.now()
+          });
+          setShowForm(false); setTitle(''); setContent('');
+      };
+
       return (
         <div className="space-y-6 pb-24 max-w-[650px] mx-auto px-4 mt-4 animate-in">
           <div className="card-fb p-6 bg-gradient-to-br from-[#1877F2]/10 to-white border-t-4 border-[#1877F2] shadow-xl text-center">
-            <i className="fa-solid fa-scroll text-3xl text-[#1877F2] mb-3"></i>
-            <h2 className="font-black text-xl text-gray-800 uppercase tracking-tighter italic">Prédica Diaria</h2>
+            <i className="fa-solid fa-sparkles text-3xl text-[#1877F2] mb-3"></i>
+            <h2 className="font-black text-xl text-gray-800 uppercase tracking-tighter italic">Sabiduría Ministerial</h2>
           </div>
-          {devs.length === 0 && (
+
+          {/* BOTÓN PARA AÑADIR */}
+          {isUnlocked && (
+              <div className="mb-4">
+                 <button onClick={() => setShowForm(!showForm)} className="w-full bg-white border-2 border-[#1877F2] text-[#1877F2] font-black py-4 rounded-xl shadow-sm uppercase text-[12px] active:scale-95 transition-transform flex items-center justify-center gap-2">
+                    <i className={`fa-solid ${showForm ? 'fa-xmark text-red-500' : 'fa-plus'}`}></i> {showForm ? 'Cancelar' : 'Compartir Sabiduría'}
+                 </button>
+                 {showForm && (
+                    <div className="mt-3 card-fb p-5 animate-in shadow-lg border border-gray-200">
+                       <input placeholder="Tema o Título..." value={title} onChange={e=>setTitle(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-3 outline-none font-bold text-gray-800 text-[16px]" />
+                       <textarea placeholder="Escriba la palabra de sabiduría..." value={content} onChange={e=>setContent(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-4 outline-none h-32 resize-none text-gray-800 text-[16px]" />
+                       <button onClick={handleAdd} className="w-full bg-[#1877F2] text-white font-black py-4 rounded-xl shadow-md uppercase text-[12px] active:scale-95 transition-transform">Publicar Semilla</button>
+                    </div>
+                 )}
+              </div>
+          )}
+
+          {items.length === 0 && (
              <div className="text-center p-10 opacity-40">
-                 <i className="fa-solid fa-book-bible text-5xl mb-4 text-gray-400"></i>
-                <p className="font-black uppercase tracking-widest text-xs text-gray-500">Esperando la palabra del día.</p>
+                 <i className="fa-solid fa-seedling text-5xl mb-4 text-gray-400"></i>
+                <p className="font-black uppercase tracking-widest text-xs text-gray-500">Esperando la primera semilla.</p>
              </div>
           )}
-          {devs.map(d => (
-            <div key={d.id} className="card-fb p-6 bg-white border border-gray-200 shadow-md animate-up text-left">
-              <h3 className="font-black text-lg text-[#1877F2] mb-1 italic uppercase">{d.title}</h3>
-              <p className="text-gray-700 text-sm leading-relaxed mb-4 whitespace-pre-wrap">{d.content}</p>
-              <div className="text-[9px] text-gray-400 font-bold uppercase italic text-right">{new Date(d.at).toLocaleDateString()}</div>
+          {items.map(d => (
+            <div key={d.id} className="card-fb p-6 bg-white border border-gray-200 shadow-md animate-up text-left relative">
+              {(isAdmin || d.uid === user?.uid) && <button onClick={()=>db.collection('artifacts').doc(appId).collection('public').doc('data').collection('wisdom').doc(d.id).delete()} className="absolute top-4 right-4 text-red-400 active:scale-90"><i className="fa-solid fa-trash-can"></i></button>}
+              <h3 className="font-black text-lg text-[#1877F2] mb-2 italic uppercase pr-6">{d.title}</h3>
+              <p className="text-gray-700 text-[15px] leading-relaxed mb-4 whitespace-pre-wrap">{d.content}</p>
+              <div className="flex justify-between items-center border-t border-gray-100 pt-3">
+                 <span className="text-[10px] text-gray-500 font-bold uppercase"><i className="fa-solid fa-user text-[#1877F2] mr-1"></i> {d.authorName}</span>
+                 <span className="text-[9px] text-gray-400 font-bold uppercase italic">{new Date(d.at).toLocaleDateString()}</span>
+              </div>
             </div>
           ))}
         </div>
       );
     }
 
-    function GroupView({ user }) {
+    function DevotionalsView({ user, profile, isUnlocked, isAdmin }) {
+      const [devs, setDevs] = useState([]);
+      const [showForm, setShowForm] = useState(false);
+      const [title, setTitle] = useState('');
+      const [content, setContent] = useState('');
+
+      useEffect(() => { 
+          if(!db) return;
+          const unsub = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('devotionals').onSnapshot(s => setDevs(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at)), err => console.log(err)); return ()=>unsub(); 
+      }, []);
+
+      const handleAdd = async () => {
+          if(!title.trim() || !content.trim() || !user || !profile) return;
+          await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('devotionals').add({
+              title, content, uid: user.uid, authorName: profile.name, at: Date.now()
+          });
+          setShowForm(false); setTitle(''); setContent('');
+      };
+
+      return (
+        <div className="space-y-6 pb-24 max-w-[650px] mx-auto px-4 mt-4 animate-in">
+          <div className="card-fb p-6 bg-gradient-to-br from-[#1877F2]/10 to-white border-t-4 border-[#1877F2] shadow-xl text-center">
+            <i className="fa-solid fa-book-bible text-3xl text-[#1877F2] mb-3"></i>
+            <h2 className="font-black text-xl text-gray-800 uppercase tracking-tighter italic">Prédica Diaria</h2>
+          </div>
+
+          {/* BOTÓN PARA AÑADIR */}
+          {isUnlocked && (
+              <div className="mb-4">
+                 <button onClick={() => setShowForm(!showForm)} className="w-full bg-white border-2 border-[#1877F2] text-[#1877F2] font-black py-4 rounded-xl shadow-sm uppercase text-[12px] active:scale-95 transition-transform flex items-center justify-center gap-2">
+                    <i className={`fa-solid ${showForm ? 'fa-xmark text-red-500' : 'fa-plus'}`}></i> {showForm ? 'Cancelar' : 'Añadir Prédica'}
+                 </button>
+                 {showForm && (
+                    <div className="mt-3 card-fb p-5 animate-in shadow-lg border border-gray-200">
+                       <input placeholder="Título de la Prédica..." value={title} onChange={e=>setTitle(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-3 outline-none font-bold text-gray-800 text-[16px]" />
+                       <textarea placeholder="Escriba la enseñanza..." value={content} onChange={e=>setContent(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-4 outline-none h-40 resize-none text-gray-800 text-[16px]" />
+                       <button onClick={handleAdd} className="w-full bg-[#1877F2] text-white font-black py-4 rounded-xl shadow-md uppercase text-[12px] active:scale-95 transition-transform">Publicar Prédica</button>
+                    </div>
+                 )}
+              </div>
+          )}
+
+          {devs.length === 0 && (
+             <div className="text-center p-10 opacity-40">
+                 <i className="fa-solid fa-scroll text-5xl mb-4 text-gray-400"></i>
+                <p className="font-black uppercase tracking-widest text-xs text-gray-500">Esperando la palabra del día.</p>
+             </div>
+          )}
+          {devs.map(d => (
+            <div key={d.id} className="card-fb p-6 bg-white border border-gray-200 shadow-md animate-up text-left relative">
+              {(isAdmin || d.uid === user?.uid) && <button onClick={()=>db.collection('artifacts').doc(appId).collection('public').doc('data').collection('devotionals').doc(d.id).delete()} className="absolute top-4 right-4 text-red-400 active:scale-90"><i className="fa-solid fa-trash-can"></i></button>}
+              <h3 className="font-black text-lg text-[#1877F2] mb-1 italic uppercase">{d.title}</h3>
+              <p className="text-gray-700 text-[15px] leading-relaxed mb-4 whitespace-pre-wrap">{d.content}</p>
+              <div className="flex justify-between items-center border-t border-gray-100 pt-3">
+                 <span className="text-[10px] text-gray-500 font-bold uppercase"><i className="fa-solid fa-user text-[#1877F2] mr-1"></i> {d.authorName}</span>
+                 <span className="text-[9px] text-gray-400 font-bold uppercase italic text-right">{new Date(d.at).toLocaleDateString()}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function GroupView({ user, profile, isUnlocked, isAdmin }) {
       const [groups, setGroups] = useState([]);
+      const [showForm, setShowForm] = useState(false);
+      const [name, setName] = useState('');
+      const [desc, setDesc] = useState('');
+
       useEffect(() => { 
           if(!user || !db) return; 
           const colG = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('groups');
           const unsub = colG.onSnapshot(s => setGroups(s.docs.map(d=>({id:d.id, ...d.data()}))), err => console.log(err)); 
           return ()=>unsub(); 
       }, [user]);
+
+      const handleAdd = async () => {
+          if(!name.trim() || !desc.trim() || !user || !profile) return;
+          await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('groups').add({
+              name, desc, uid: user.uid, authorName: profile.name, at: Date.now()
+          });
+          setShowForm(false); setName(''); setDesc('');
+      };
+
       return (
         <div className="space-y-6 pb-24 max-w-[850px] mx-auto animate-in px-4 mt-4">
-          <div className="card-fb p-5 bg-white border-t-4 border-[#1877F2] shadow-lg text-center"><h2 className="font-black text-lg text-gray-800 uppercase italic">Grupos Bíblicos</h2></div>
+          <div className="card-fb p-5 bg-white border-t-4 border-blue-500 shadow-lg text-center">
+             <i className="fa-solid fa-users-rectangle text-3xl text-blue-500 mb-2"></i>
+             <h2 className="font-black text-lg text-gray-800 uppercase italic">Grupos Bíblicos</h2>
+          </div>
+
+          {/* BOTÓN PARA AÑADIR */}
+          {isUnlocked && (
+              <div className="mb-4">
+                 <button onClick={() => setShowForm(!showForm)} className="w-full bg-white border-2 border-blue-500 text-blue-600 font-black py-4 rounded-xl shadow-sm uppercase text-[12px] active:scale-95 transition-transform flex items-center justify-center gap-2">
+                    <i className={`fa-solid ${showForm ? 'fa-xmark text-red-500' : 'fa-plus'}`}></i> {showForm ? 'Cancelar' : 'Crear Grupo'}
+                 </button>
+                 {showForm && (
+                    <div className="mt-3 card-fb p-5 animate-in shadow-lg border border-gray-200">
+                       <input placeholder="Nombre del Grupo..." value={name} onChange={e=>setName(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-3 outline-none font-bold text-gray-800 text-[16px]" />
+                       <textarea placeholder="Descripción o Enlace de WhatsApp..." value={desc} onChange={e=>setDesc(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-4 outline-none h-24 resize-none text-gray-800 text-[16px]" />
+                       <button onClick={handleAdd} className="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-md uppercase text-[12px] active:scale-95 transition-transform">Crear Grupo</button>
+                    </div>
+                 )}
+              </div>
+          )}
+
           {groups.length === 0 && (
              <div className="text-center p-10 opacity-40">
                 <i className="fa-solid fa-users-slash text-5xl mb-4 text-gray-400"></i>
                 <p className="font-black uppercase tracking-widest text-xs text-gray-500">Aún no hay grupos formados.</p>
              </div>
           )}
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {groups.map(g => (
-              <div key={g.id} className="card-fb p-5 bg-white border border-gray-200 shadow-sm flex flex-col text-left"><h3 className="font-black text-lg text-[#1877F2] mb-1 uppercase tracking-tighter">#{g.name}</h3><p className="text-gray-600 text-sm mt-1">{g.desc}</p></div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    function StoreView({ isAdmin, user }) {
-      const [items, setItems] = useState([]);
-      useEffect(() => { 
-          if(!user || !db) return; 
-          const colS = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('store');
-          const unsub = colS.onSnapshot(s => setItems(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at)), err => console.log(err)); 
-          return ()=>unsub(); 
-      }, [user]);
-      return (
-        <div className="space-y-6 pb-24 max-w-[1050px] mx-auto px-4 mt-4 animate-in">
-          <div className="card-fb p-5 bg-white border-t-4 border-green-500 shadow-lg text-center"><h2 className="font-black text-lg text-gray-800 uppercase italic">Tienda Davar</h2></div>
-          {items.length === 0 && (
-             <div className="text-center p-10 opacity-40">
-                <i className="fa-solid fa-store-slash text-5xl mb-4 text-gray-400"></i>
-                <p className="font-black uppercase tracking-widest text-xs text-gray-500">La tienda ministerial está vacía.</p>
-             </div>
-          )}
-          <div className="grid grid-cols-2 gap-4">
-            {items.map(i => (
-              <div key={i.id} className="store-item bg-white rounded-xl flex flex-col border border-gray-200 shadow-sm overflow-hidden relative active:scale-95 transition-transform text-left">
-                {(i.uid === user?.uid || isAdmin) && <button onClick={async ()=>{ const colS = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('store'); await colS.doc(i.id).delete(); }} className="absolute top-2 right-2 text-red-500 bg-white p-1 rounded-full shadow-md"><i className="fa-solid fa-trash-can text-xs"></i></button>}
-                <img src={i.img} className="h-36 w-full object-cover" onError={(e)=>{e.target.src=LOGO_URL}} />
-                <div className="p-3 flex-1 flex flex-col">
-                  <p className="text-green-700 font-black text-lg mb-1 italic font-serif">${i.price}</p>
-                  <h4 className="font-bold text-gray-800 truncate text-[12px] mb-2 uppercase">{i.name}</h4>
-                  <button onClick={()=>window.open(`https://api.whatsapp.com/send?text=Bendiciones, me interesa tu producto en Davar: ${i.name}`,'_blank')} className="w-full mt-auto bg-gray-100 py-2.5 rounded-lg font-black text-[9px] uppercase border border-gray-200 shadow-sm text-gray-800">WhatsApp</button>
-                </div>
+              <div key={g.id} className="card-fb p-6 bg-white border border-gray-200 shadow-sm flex flex-col text-left relative">
+                {(isAdmin || g.uid === user?.uid) && <button onClick={()=>db.collection('artifacts').doc(appId).collection('public').doc('data').collection('groups').doc(g.id).delete()} className="absolute top-4 right-4 text-red-400 active:scale-90"><i className="fa-solid fa-trash-can"></i></button>}
+                <h3 className="font-black text-lg text-blue-600 mb-2 uppercase tracking-tighter pr-6">#{g.name}</h3>
+                <p className="text-gray-600 text-[15px] mt-1 whitespace-pre-wrap">{g.desc}</p>
+                <div className="mt-4 pt-3 border-t border-gray-100 text-[10px] text-gray-400 font-bold uppercase"><i className="fa-solid fa-crown text-[#D4AF37] mr-1"></i> Creado por: {g.authorName}</div>
               </div>
             ))}
           </div>
@@ -713,24 +734,76 @@
       );
     }
 
-    function ProfilePosts({ user }) {
-      const [myPosts, setMyPosts] = useState([]);
+    function StoreView({ isAdmin, user, profile, isUnlocked }) {
+      const [items, setItems] = useState([]);
+      const [showForm, setShowForm] = useState(false);
+      const [name, setName] = useState('');
+      const [price, setPrice] = useState('');
+      const [img, setImg] = useState('');
+
       useEffect(() => { 
-          if (!user || !db) return; 
-          const colP = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts');
-          const unsub = colP.onSnapshot(s => setMyPosts(s.docs.map(d=>({id:d.id, ...d.data()})).filter(x=>x.uid === user.uid).sort((a,b)=>b.at-a.at)), err => console.log(err)); 
-          return () => unsub(); 
-      }, [user?.uid]);
+          if(!user || !db) return; 
+          const colS = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('store');
+          const unsub = colS.onSnapshot(s => setItems(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at)), err => console.log(err)); 
+          return ()=>unsub(); 
+      }, [user]);
+
+      const handleAdd = async () => {
+          if(!name.trim() || !price.trim() || !img || !user || !profile) return;
+          await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('store').add({
+              name, price, img, uid: user.uid, authorName: profile.name, at: Date.now()
+          });
+          setShowForm(false); setName(''); setPrice(''); setImg('');
+      };
+
       return (
-        <div className="max-w-[620px] mx-auto space-y-4 mt-6 px-2 md:px-0">
-          <h3 className="font-black text-xs uppercase tracking-widest text-gray-400 text-center italic mb-3">Mi Historial Ministerial</h3>
-          {myPosts.length === 0 && <p className="text-[10px] text-gray-400 uppercase font-bold opacity-50">Aún no has compartido nada en el muro.</p>}
-          {myPosts.map(p => (
-            <div key={p.id} className="card-fb bg-white p-4 shadow-sm border border-gray-200 flex justify-between items-start animate-up text-left">
-               <div className="flex-1 text-left pr-3"><p className="text-[9px] text-[#1877F2] font-black mb-1 uppercase leading-none">{new Date(p.at).toLocaleString()}</p>{p.text && <p className="text-[13px] line-clamp-2 italic text-gray-700">"{p.text}"</p>}</div>
-               <button onClick={async ()=>{ const colP = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts'); await colP.doc(p.id).delete(); }} className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center shadow-sm flex-shrink-0 active:scale-90 transition-transform"><i className="fa-solid fa-trash-can text-sm"></i></button>
-            </div>
-          ))}
+        <div className="space-y-6 pb-24 max-w-[1050px] mx-auto px-4 mt-4 animate-in">
+          <div className="card-fb p-5 bg-white border-t-4 border-green-500 shadow-lg text-center">
+             <i className="fa-solid fa-store text-3xl text-green-500 mb-2"></i>
+             <h2 className="font-black text-lg text-gray-800 uppercase italic">Tienda Davar</h2>
+          </div>
+
+          {/* BOTÓN PARA AÑADIR */}
+          {isUnlocked && (
+              <div className="mb-4 max-w-[650px] mx-auto">
+                 <button onClick={() => setShowForm(!showForm)} className="w-full bg-white border-2 border-green-500 text-green-600 font-black py-4 rounded-xl shadow-sm uppercase text-[12px] active:scale-95 transition-transform flex items-center justify-center gap-2">
+                    <i className={`fa-solid ${showForm ? 'fa-xmark text-red-500' : 'fa-plus'}`}></i> {showForm ? 'Cancelar' : 'Agregar Producto'}
+                 </button>
+                 {showForm && (
+                    <div className="mt-3 card-fb p-5 animate-in shadow-lg border border-gray-200 flex flex-col gap-4">
+                       <label className="bg-gray-50 hover:bg-gray-100 transition-colors p-6 rounded-2xl text-center cursor-pointer border-2 border-dashed border-gray-300">
+                          <i className={`fa-solid ${img ? 'fa-check-circle text-green-500' : 'fa-camera text-gray-400'} text-4xl mb-2 block`}></i>
+                          <span className="text-[14px] font-bold text-gray-600">{img ? 'Imagen Lista' : 'Subir Foto del Producto'}</span>
+                          <input type="file" className="hidden" accept="image/*" onChange={async e=>setImg(await compressMedia(e.target.files[0]))} />
+                       </label>
+                       {img && <img src={img} className="h-32 object-contain rounded-xl shadow-md border border-gray-200" />}
+                       <input placeholder="Nombre del Producto..." value={name} onChange={e=>setName(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl outline-none font-bold text-gray-800 text-[16px]" />
+                       <input type="number" placeholder="Precio (Ej: 10000)" value={price} onChange={e=>setPrice(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl outline-none font-bold text-gray-800 text-[16px]" />
+                       <button onClick={handleAdd} className="w-full bg-green-500 text-white font-black py-4 rounded-xl shadow-md uppercase text-[12px] active:scale-95 transition-transform">Publicar en Tienda</button>
+                    </div>
+                 )}
+              </div>
+          )}
+
+          {items.length === 0 && (
+             <div className="text-center p-10 opacity-40">
+                <i className="fa-solid fa-store-slash text-5xl mb-4 text-gray-400"></i>
+                <p className="font-black uppercase tracking-widest text-xs text-gray-500">La tienda ministerial está vacía.</p>
+             </div>
+          )}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {items.map(i => (
+              <div key={i.id} className="store-item bg-white rounded-2xl flex flex-col border border-gray-200 shadow-sm overflow-hidden relative text-left">
+                {(i.uid === user?.uid || isAdmin) && <button onClick={async ()=>{ const colS = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('store'); await colS.doc(i.id).delete(); }} className="absolute top-2 right-2 text-red-500 bg-white p-2 rounded-full shadow-md active:scale-90"><i className="fa-solid fa-trash-can text-sm"></i></button>}
+                <img src={i.img} className="h-40 w-full object-cover" onError={(e)=>{e.target.src=LOGO_URL}} />
+                <div className="p-4 flex-1 flex flex-col">
+                  <p className="text-green-600 font-black text-xl mb-1 italic font-serif">${i.price}</p>
+                  <h4 className="font-bold text-gray-800 text-[14px] mb-3 uppercase leading-tight">{i.name}</h4>
+                  <button onClick={()=>window.open(`https://api.whatsapp.com/send?text=Bendiciones, me interesa tu producto en Davar: ${i.name}`,'_blank')} className="w-full mt-auto bg-[#25D366]/10 text-[#25D366] py-3 rounded-xl font-black text-[10px] uppercase border border-[#25D366]/30 shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"><i className="fa-brands fa-whatsapp text-lg"></i> WhatsApp</button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       );
     }
@@ -943,10 +1016,10 @@
              <div className={`w-full max-w-[650px] mx-auto transition-all`}>
                 {tab==='feed' && <WallView user={user} profile={profile} isUnlocked={isUnlocked} isAdmin={isAdmin} onStartLive={()=>setIsBroadcasting(true)} onJoinLive={id=>setLiveId(id)} />}
                 {tab==='chat' && <ChatPanel user={user} profile={profile} isUnlocked={isUnlocked} isAdmin={isAdmin} />}
-                {tab==='wisdom' && <div className="h-[78vh] flex flex-col card-fb overflow-hidden border-t-4 border-[#1877F2] animate-up bg-white shadow-xl mt-4 mx-2 sm:mx-0"><div className="p-10 text-center flex flex-col items-center justify-center flex-1"><i className="fa-solid fa-scroll text-5xl text-[#1877F2] mb-6 animate-bounce"></i><h2 className="text-2xl font-black text-gray-800 uppercase tracking-tighter mb-4 italic leading-tight text-center text-balance text-wrap">Sabiduría Ministerial</h2><p className="text-gray-500 text-sm leading-relaxed text-center">Aposento sagrado para la guía espiritual ministerial.</p></div></div>}
-                {tab==='groups' && <GroupView user={user} />}
-                {tab==='store' && <StoreView isAdmin={isAdmin} user={user} />}
-                {tab==='devs' && <DevotionalsView />}
+                {tab==='wisdom' && <WisdomView user={user} profile={profile} isUnlocked={isUnlocked} isAdmin={isAdmin} />}
+                {tab==='groups' && <GroupView user={user} profile={profile} isUnlocked={isUnlocked} isAdmin={isAdmin} />}
+                {tab==='store' && <StoreView user={user} profile={profile} isUnlocked={isUnlocked} isAdmin={isAdmin} />}
+                {tab==='devs' && <DevotionalsView user={user} profile={profile} isUnlocked={isUnlocked} isAdmin={isAdmin} />}
                 {tab==='profile' && (
                     (!profile || !isUnlocked) ? (
                         <div className="card-fb p-8 max-w-sm mx-auto mt-6 text-center border-t-4 border-[#1877F2] shadow-2xl bg-white animate-up m-2 sm:m-auto">
