@@ -139,41 +139,48 @@
       return <a href={url} target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-xl border border-blue-100 block text-blue-600 font-bold truncate text-[11px] mb-2"><i className="fa-solid fa-link mr-2"></i> Abrir contenido externo</a>;
     };
 
-    // --- SESIÓN EN VIVO CON ESPEJO DE CÁMARA ---
+    // --- SESIÓN EN VIVO CON ESPEJO DE CÁMARA LIBERADO ---
     const LiveSession = ({ profile, broadcasterId, isBroadcaster, onClose }) => {
       const roomName = `DavarMinisterio_${broadcasterId}`;
       const [isLive, setIsLive] = useState(!isBroadcaster); 
+      const [camStatus, setCamStatus] = useState('idle'); // idle, granted, denied
       const videoRef = useRef(null);
       const streamRef = useRef(null);
 
-      // Encender cámara local para vista previa
-      useEffect(() => {
-        if (isBroadcaster && !isLive) {
-          navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(stream => {
-              streamRef.current = stream;
-              if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-              }
-            })
-            .catch(err => console.error("Acceso a cámara denegado:", err));
-        }
+      // Solicitud manual de cámara para evitar bloqueos
+      const requestCamera = async () => {
+         try {
+             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
+             streamRef.current = stream;
+             if (videoRef.current) videoRef.current.srcObject = stream;
+             setCamStatus('granted');
+         } catch(e) {
+             console.error("Error de cámara:", e);
+             setCamStatus('denied');
+         }
+      };
 
-        // Apagar cámara local al montar el iframe o salir
+      useEffect(() => {
+        // Limpiar cámara local al desmontar
         return () => {
           if (streamRef.current) {
             streamRef.current.getTracks().forEach(t => t.stop());
           }
         };
-      }, [isBroadcaster, isLive]);
-
-      useEffect(() => {
-        return () => { if (isBroadcaster && db && isLive) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').doc(broadcasterId).delete(); };
-      }, [isLive]);
+      }, []);
 
       const startStream = () => {
-         setIsLive(true);
-         if (db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').doc(broadcasterId).set({ uid: broadcasterId, name: profile.name, photo: profile.photo || LOGO_URL, at: Date.now() });
+         // MILAGRO DE LIBERACIÓN: Apagamos la cámara local ANTES de iniciar Jitsi para evitar conflictos
+         if (streamRef.current) {
+             streamRef.current.getTracks().forEach(t => t.stop());
+             streamRef.current = null;
+         }
+         
+         // Esperamos un momento a que el celular libere el hardware y luego abrimos la transmisión
+         setTimeout(() => {
+             setIsLive(true);
+             if (db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').doc(broadcasterId).set({ uid: broadcasterId, name: profile.name, photo: profile.photo || LOGO_URL, at: Date.now() });
+         }, 500);
       };
 
       const stopStream = async () => {
@@ -185,27 +192,42 @@
         <div className="live-overlay animate-in">
           <div className="flex-1 bg-black relative flex flex-col items-center justify-center overflow-hidden">
             
+            {/* PANTALLA DE PREPARACIÓN PARA EL LOCUTOR */}
             {!isLive && isBroadcaster && (
                <>
-                 <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover opacity-60"></video>
-                 <div className="z-10 bg-black/70 p-8 rounded-3xl backdrop-blur-md border border-white/20 text-center shadow-2xl max-w-sm mx-4">
-                    <div className="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-4 shadow-2xl border-4 border-[#1877F2]">
-                        <i className="fa-solid fa-video text-3xl text-white"></i>
+                 <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover opacity-50"></video>
+                 <div className="z-10 bg-black/80 p-8 rounded-3xl backdrop-blur-md border border-white/20 text-center shadow-2xl max-w-sm mx-4">
+                    <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-2xl border-4 ${camStatus === 'granted' ? 'bg-green-600 border-green-400' : 'bg-gray-800 border-[#1877F2]'}`}>
+                        <i className={`fa-solid ${camStatus === 'granted' ? 'fa-video' : 'fa-video-slash'} text-3xl text-white`}></i>
                     </div>
                     <h2 className="text-white font-black text-2xl uppercase tracking-widest mb-2">Cámara Lista</h2>
-                    <p className="text-gray-300 text-xs mb-8 leading-relaxed">Ajuste su imagen. Al presionar el botón, la transmisión comenzará para todos los hermanos.</p>
-                    <button onClick={startStream} className="bg-green-500 text-white font-black px-10 py-4 rounded-full shadow-[0_0_30px_rgba(34,197,94,0.5)] active:scale-95 transition-transform text-sm uppercase flex items-center gap-3 mx-auto">
-                        <i className="fa-solid fa-play text-xl"></i> Iniciar Vivo
+                    <p className="text-gray-300 text-xs mb-6 leading-relaxed">
+                        {camStatus === 'idle' ? 'Permita el acceso a la cámara para verse antes de transmitir.' : 
+                         camStatus === 'granted' ? 'Imagen lista. Presione iniciar para compartir la bendición.' : 
+                         'No se detectó cámara, pero aún puede intentar iniciar la transmisión.'}
+                    </p>
+                    
+                    {camStatus === 'idle' && (
+                        <button onClick={requestCamera} className="bg-[#1877F2] text-white font-black w-full py-4 rounded-xl shadow-lg active:scale-95 transition-transform text-sm uppercase mb-4">
+                            1. Permitir Cámara
+                        </button>
+                    )}
+
+                    <button onClick={startStream} className={`${camStatus === 'idle' ? 'bg-gray-600' : 'bg-green-500 shadow-[0_0_30px_rgba(34,197,94,0.5)]'} text-white font-black w-full py-4 rounded-xl active:scale-95 transition-transform text-sm uppercase flex items-center justify-center gap-2`}>
+                        <i className="fa-solid fa-play text-lg"></i> 2. Iniciar Vivo
                     </button>
+                    
                     <button onClick={onClose} className="mt-6 text-gray-400 font-bold uppercase text-[10px] active:scale-90 tracking-widest">Cancelar y Salir</button>
                  </div>
                </>
             )}
 
+            {/* TRANSMISIÓN EN VIVO REAL (JITSI) */}
             {isLive && (
                 <iframe src={`https://meet.jit.si/${roomName}#config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.disableDeepLinking=true&config.prejoinPageEnabled=false`} className="w-full h-full border-none" allow="camera; microphone; fullscreen; display-capture; autoplay" />
             )}
 
+            {/* ENCABEZADO DURANTE EL VIVO */}
             {isLive && (
                 <div className="absolute top-10 left-6 flex items-center gap-3 bg-black/60 p-2 pr-5 rounded-full backdrop-blur-md border border-white/20 shadow-lg">
                    <img src={profile?.photo || LOGO_URL} className="h-10 w-10 rounded-full border-2 border-[#1877F2] object-cover bg-white" onError={(e)=>{e.target.src=LOGO_URL}} />
@@ -216,6 +238,7 @@
                 </div>
             )}
             
+            {/* BOTÓN PARA FINALIZAR EL VIVO */}
             {isLive && (
                 <div className="live-controls-side">
                   {isBroadcaster ? (
@@ -385,7 +408,7 @@
               </div>
           </div>
           
-          {/* PANEL DE NUEVA PUBLICACIÓN */}
+          {/* PANEL DE NUEVA PUBLICACIÓN CON TODAS LAS OPCIONES */}
           {isPostDialogOpen && (
           <div className="card-fb p-5 border-2 border-[#1877F2] animate-in shadow-2xl relative bg-white z-50 mb-4 mx-2 sm:mx-0">
              <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-2"><h3 className="font-bold text-gray-800 text-[12px] uppercase italic">Nueva Bendición</h3><i onClick={closeDialog} className="fa-solid fa-xmark cursor-pointer p-2 bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-200"></i></div>
@@ -651,7 +674,9 @@
       const [loadingAuth, setLoadingAuth] = useState(false); 
       const [authError, setAuthError] = useState('');
       const [showAdminModal, setShowAdminModal] = useState(false); const [adminPwd, setAdminPwd] = useState('');
+      
       const [deferredPrompt, setDeferredPrompt] = useState(null);
+      const [showInstallModal, setShowInstallModal] = useState(false);
 
       // --- VERIFICACIÓN DE FIREBASE ---
       if (typeof isInvalidKey !== 'undefined' && isInvalidKey) {
@@ -666,7 +691,6 @@
 
       // --- LÓGICA DEL SELLO PWA (INSTALAR APP) ---
       useEffect(() => {
-        // 1. Inyectar Manifiesto para permitir descarga con Logo CD Dios
         const manifest = {
           name: "Comunidad Davar",
           short_name: "Davar",
@@ -688,7 +712,6 @@
         if (!link) { link = document.createElement('link'); link.rel = 'manifest'; document.head.appendChild(link); }
         link.href = manifestURL;
 
-        // 2. Registro de Instalador
         const handleBeforeInstallPrompt = (e) => { e.preventDefault(); setDeferredPrompt(e); };
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         
@@ -704,7 +727,8 @@
           deferredPrompt.prompt();
           deferredPrompt.userChoice.then(() => setDeferredPrompt(null));
         } else {
-          alert("Para instalar en su celular:\n\n1. Toque el menú de su navegador (los tres puntos ⋮ o el ícono de compartir ⍗).\n2. Seleccione 'Agregar a la pantalla principal' o 'Instalar aplicación'.\n\n¡Y listo!");
+          // Si el celular bloquea el prompt automático (como en iPhone), mostramos nuestro panel visual
+          setShowInstallModal(true);
         }
       };
 
@@ -800,6 +824,35 @@
                 </button>
             </div>
           </header>
+
+          {/* VENTANA DE INSTALACIÓN VISUAL (Para iPhone y Android bloqueado) */}
+          {showInstallModal && (
+            <div className="fixed inset-0 bg-black/80 z-[6000] flex items-center justify-center p-4 animate-in">
+                <div className="bg-white p-6 rounded-3xl w-full max-w-sm text-center shadow-2xl relative border-t-4 border-[#1877F2]">
+                    <button onClick={() => setShowInstallModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800 active:scale-90"><i className="fa-solid fa-xmark text-2xl"></i></button>
+                    
+                    <img src={LOGO_URL} className="w-20 h-20 rounded-full mx-auto mb-4 shadow-md border-2 border-gray-100" />
+                    <h3 className="text-[#1877F2] font-black text-xl uppercase tracking-tighter mb-2">Instalar Aplicación</h3>
+                    <p className="text-gray-600 text-sm mb-6 leading-relaxed">Para tener la Red Davar en su pantalla de inicio y usarla sin entrar al navegador, siga estos pasos:</p>
+                    
+                    <div className="bg-gray-50 p-5 rounded-2xl text-left text-sm text-gray-700 space-y-4 mb-6 border border-gray-200 shadow-inner">
+                        <p className="flex items-start gap-3">
+                            <span className="text-2xl">🍏</span> 
+                            <span><b>En iPhone (Safari):</b> Toque el ícono de Compartir <i className="fa-solid fa-arrow-up-from-bracket text-blue-500 mx-1"></i> en la barra inferior y luego seleccione <b>"Agregar a Inicio"</b>.</span>
+                        </p>
+                        <div className="h-px bg-gray-200 w-full"></div>
+                        <p className="flex items-start gap-3">
+                            <span className="text-2xl">🤖</span> 
+                            <span><b>En Android (Chrome):</b> Toque los 3 puntos <i className="fa-solid fa-ellipsis-vertical text-gray-800 mx-1"></i> arriba a la derecha y elija <b>"Instalar aplicación"</b>.</span>
+                        </p>
+                    </div>
+                    
+                    <button onClick={() => setShowInstallModal(false)} className="w-full bg-[#1877F2] text-white font-black py-4 rounded-xl shadow-md uppercase text-[12px] tracking-widest active:scale-95 transition-all">
+                        ¡Entendido!
+                    </button>
+                </div>
+            </div>
+          )}
 
           {/* VENTANA DE ADMIN */}
           {showAdminModal && (
