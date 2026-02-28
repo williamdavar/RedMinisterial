@@ -28,7 +28,6 @@
     :root { --fb-blue: #1877F2; --fb-bg: #F0F2F5; --fb-white: #FFFFFF; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--fb-bg); margin: 0; color: #1C1E21; overflow: hidden; height: 100vh; }
     
-    /* El encabezado ya no está "fixed" de forma rígida, usa flex-shrink para convivir con los banners */
     .header-fb { background: var(--fb-white); height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; width: 100%; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-bottom: 1px solid #e4e6eb; flex-shrink: 0; }
     
     .card-fb { background: var(--fb-white); border-radius: 12px; border: 1px solid #dddfe2; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 12px; overflow: hidden; position: relative; }
@@ -44,7 +43,6 @@
     .live-controls-side { position: absolute; right: 20px; bottom: 40px; display: flex; flex-direction: column; gap: 20px; z-index: 1010; }
     .live-chat-msg { background: rgba(255,255,255,0.9); padding: 8px 14px; border-radius: 20px; color: #1C1E21; font-size: 13px; border: 1px solid #dddfe2; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
     
-    /* Barra Inferior Ministerial Blanca - Adaptada a celulares modernos */
     .nav-bottom { position: fixed; bottom: 0; width: 100%; height: 70px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #e4e6eb; z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); padding-bottom: env(safe-area-inset-bottom); }
     .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #65676B; transition: 0.2s; border: none; background: none; outline: none; padding: 6px 0; cursor: pointer; height: 100%; }
     .nav-btn.active { color: var(--fb-blue); }
@@ -61,7 +59,6 @@
     
     .profile-cover { width: 100%; height: 180px; background: #E4E6EB; border-radius: 12px 12px 0 0; object-fit: cover; }
     .profile-avatar-wrapper { margin-top: -60px; position: relative; display: inline-block; }
-    .comment-bubble { background: #F0F2F5; padding: 8px 12px; border-radius: 18px; font-size: 13px; margin-bottom: 4px; border: 1px solid #dddfe2; }
     
     .emoji-panel { display: grid; grid-template-cols: repeat(6, 1fr); gap: 8px; padding: 12px; background: white; border: 1px solid #ddd; border-radius: 12px; position: absolute; z-index: 100; bottom: 70px; left: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 260px; max-height: 150px; overflow-y: auto; }
     .emoji-item { font-size: 22px; cursor: pointer; text-align: center; padding: 4px; transition: transform 0.1s; }
@@ -89,25 +86,19 @@
 
     let auth = null;
     let db = null;
-
     const isInvalidKey = !firebaseConfig.apiKey || firebaseConfig.apiKey.includes("PEGUE") || firebaseConfig.apiKey === "";
 
     if (!isInvalidKey) {
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         auth = firebase.auth();
         db = firebase.firestore();
     }
     
     const appId = "comunidad-davar-v2026-arca-final"; 
     
-    // LOGO AZUL Y BLANCO ETERNO (CON DIOS EN DORADO)
+    // LOGOS Y PORTADAS
     const LOGO_URL = "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%231877F2%22%20rx%3D%2240%22%2F%3E%3Ctext%20x%3D%22100%22%20y%3D%22115%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2285%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%22-4%22%3ECD%3C%2Ftext%3E%3Ctext%20x%3D%22100%22%20y%3D%22160%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2226%22%20fill%3D%22%23D4AF37%22%20text-anchor%3D%22middle%22%20text-transform%3D%22uppercase%22%20letter-spacing%3D%222%22%3EDios%3C%2Ftext%3E%3C%2Fsvg%3E";
-    // PORTADA CLARA ETERNA
     const DEFAULT_COVER = "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221000%22%20height%3D%22400%22%3E%3Crect%20width%3D%221000%22%20height%3D%22400%22%20fill%3D%22%23E4E6EB%22%2F%3E%3Cpath%20d%3D%22M0%20400%20L1000%20400%20L1000%20200%20Q500%20350%200%20200%20Z%22%20fill%3D%22%231877F2%22%20opacity%3D%220.1%22%2F%3E%3C%2Fsvg%3E";
-
-    // --- COMPONENTES AUXILIARES ---
 
     function GuestBanner() {
         return (
@@ -148,10 +139,33 @@
       return <a href={url} target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-xl border border-blue-100 block text-blue-600 font-bold truncate text-[11px] mb-2"><i className="fa-solid fa-link mr-2"></i> Abrir contenido externo</a>;
     };
 
-    // --- SESIÓN EN VIVO ---
+    // --- SESIÓN EN VIVO CON ESPEJO DE CÁMARA ---
     const LiveSession = ({ profile, broadcasterId, isBroadcaster, onClose }) => {
       const roomName = `DavarMinisterio_${broadcasterId}`;
       const [isLive, setIsLive] = useState(!isBroadcaster); 
+      const videoRef = useRef(null);
+      const streamRef = useRef(null);
+
+      // Encender cámara local para vista previa
+      useEffect(() => {
+        if (isBroadcaster && !isLive) {
+          navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+              streamRef.current = stream;
+              if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+              }
+            })
+            .catch(err => console.error("Acceso a cámara denegado:", err));
+        }
+
+        // Apagar cámara local al montar el iframe o salir
+        return () => {
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach(t => t.stop());
+          }
+        };
+      }, [isBroadcaster, isLive]);
 
       useEffect(() => {
         return () => { if (isBroadcaster && db && isLive) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').doc(broadcasterId).delete(); };
@@ -169,22 +183,27 @@
 
       return (
         <div className="live-overlay animate-in">
-          <div className="flex-1 bg-black relative flex flex-col items-center justify-center">
+          <div className="flex-1 bg-black relative flex flex-col items-center justify-center overflow-hidden">
             
-            {isLive ? (
-                <iframe src={`https://meet.jit.si/${roomName}#config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.disableDeepLinking=true&config.prejoinPageEnabled=false`} className="w-full h-full border-none" allow="camera; microphone; fullscreen; display-capture; autoplay" />
-            ) : (
-                <div className="text-center p-6 w-full max-w-sm">
-                    <div className="w-24 h-24 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-6 shadow-2xl border-4 border-gray-700">
-                        <i className="fa-solid fa-video text-4xl text-gray-400"></i>
+            {!isLive && isBroadcaster && (
+               <>
+                 <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover opacity-60"></video>
+                 <div className="z-10 bg-black/70 p-8 rounded-3xl backdrop-blur-md border border-white/20 text-center shadow-2xl max-w-sm mx-4">
+                    <div className="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center mx-auto mb-4 shadow-2xl border-4 border-[#1877F2]">
+                        <i className="fa-solid fa-video text-3xl text-white"></i>
                     </div>
-                    <h2 className="text-white font-black text-2xl uppercase tracking-widest mb-3">Cámara Lista</h2>
-                    <p className="text-gray-400 text-sm mb-10 leading-relaxed">Presione el botón para encender su cámara y micrófono. El celular le pedirá permisos de forma segura.</p>
-                    <button onClick={startStream} className="bg-green-500 text-white font-black px-12 py-5 rounded-full shadow-[0_0_30px_rgba(34,197,94,0.4)] active:scale-95 transition-transform text-lg uppercase flex items-center gap-3 mx-auto">
-                        <i className="fa-solid fa-play"></i> Iniciar Vivo
+                    <h2 className="text-white font-black text-2xl uppercase tracking-widest mb-2">Cámara Lista</h2>
+                    <p className="text-gray-300 text-xs mb-8 leading-relaxed">Ajuste su imagen. Al presionar el botón, la transmisión comenzará para todos los hermanos.</p>
+                    <button onClick={startStream} className="bg-green-500 text-white font-black px-10 py-4 rounded-full shadow-[0_0_30px_rgba(34,197,94,0.5)] active:scale-95 transition-transform text-sm uppercase flex items-center gap-3 mx-auto">
+                        <i className="fa-solid fa-play text-xl"></i> Iniciar Vivo
                     </button>
-                    <button onClick={onClose} className="mt-8 text-gray-500 font-bold uppercase text-xs active:scale-90">Cancelar</button>
-                </div>
+                    <button onClick={onClose} className="mt-6 text-gray-400 font-bold uppercase text-[10px] active:scale-90 tracking-widest">Cancelar y Salir</button>
+                 </div>
+               </>
+            )}
+
+            {isLive && (
+                <iframe src={`https://meet.jit.si/${roomName}#config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.disableDeepLinking=true&config.prejoinPageEnabled=false`} className="w-full h-full border-none" allow="camera; microphone; fullscreen; display-capture; autoplay" />
             )}
 
             {isLive && (
@@ -342,7 +361,6 @@
 
       return (
         <div className="space-y-4 pb-24 animate-up text-left w-full max-w-[620px] mx-auto mt-2">
-          {/* AVISOS DE EN VIVO */}
           {lives.map(l => (
             <div key={l.id} className="bg-red-500 p-3 rounded-xl flex items-center justify-between text-white shadow-lg animate-pulse mx-2 sm:mx-0">
               <div className="flex items-center gap-3"><img src={l.photo || LOGO_URL} onError={(e)=>{e.target.src=LOGO_URL}} className="h-9 w-9 rounded-full border-2 border-white object-cover shadow-sm bg-white" /><p className="font-bold text-[11px] uppercase italic">● EN VIVO: {l.name}</p></div>
@@ -367,7 +385,7 @@
               </div>
           </div>
           
-          {/* PANEL DE NUEVA PUBLICACIÓN CON TODAS LAS OPCIONES */}
+          {/* PANEL DE NUEVA PUBLICACIÓN */}
           {isPostDialogOpen && (
           <div className="card-fb p-5 border-2 border-[#1877F2] animate-in shadow-2xl relative bg-white z-50 mb-4 mx-2 sm:mx-0">
              <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-2"><h3 className="font-bold text-gray-800 text-[12px] uppercase italic">Nueva Bendición</h3><i onClick={closeDialog} className="fa-solid fa-xmark cursor-pointer p-2 bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-200"></i></div>
@@ -646,13 +664,38 @@
           );
       }
 
-      // --- LÓGICA PARA INSTALAR APP ---
+      // --- LÓGICA DEL SELLO PWA (INSTALAR APP) ---
       useEffect(() => {
-        const handleBeforeInstallPrompt = (e) => {
-          e.preventDefault();
-          setDeferredPrompt(e);
+        // 1. Inyectar Manifiesto para permitir descarga con Logo CD Dios
+        const manifest = {
+          name: "Comunidad Davar",
+          short_name: "Davar",
+          start_url: window.location.href,
+          display: "standalone",
+          background_color: "#F0F2F5",
+          theme_color: "#1877F2",
+          icons: [{
+            src: "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%231877F2%22%20rx%3D%2240%22%2F%3E%3Ctext%20x%3D%22100%22%20y%3D%22115%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2285%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%22-4%22%3ECD%3C%2Ftext%3E%3Ctext%20x%3D%22100%22%20y%3D%22160%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2226%22%20fill%3D%22%23D4AF37%22%20text-anchor%3D%22middle%22%20text-transform%3D%22uppercase%22%20letter-spacing%3D%222%22%3EDios%3C%2Ftext%3E%3C%2Fsvg%3E",
+            sizes: "512x512",
+            type: "image/svg+xml",
+            purpose: "any maskable"
+          }]
         };
+        const stringManifest = JSON.stringify(manifest);
+        const blob = new Blob([stringManifest], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(blob);
+        let link = document.querySelector('link[rel="manifest"]');
+        if (!link) { link = document.createElement('link'); link.rel = 'manifest'; document.head.appendChild(link); }
+        link.href = manifestURL;
+
+        // 2. Registro de Instalador
+        const handleBeforeInstallPrompt = (e) => { e.preventDefault(); setDeferredPrompt(e); };
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        
+        const swCode = `self.addEventListener('install', (e) => self.skipWaiting()); self.addEventListener('activate', (e) => self.clients.claim()); self.addEventListener('fetch', (e) => {});`;
+        const swBlob = new Blob([swCode], {type: 'application/javascript'});
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
+
         return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       }, []);
 
@@ -743,7 +786,6 @@
       
       return (
         <div className="h-screen flex flex-col overflow-hidden bg-[#F0F2F5]">
-          {/* EL BANNER Y EL ENCABEZADO AHORA SE ACOMODAN PERFECTAMENTE */}
           {(!profile || !isUnlocked) && <GuestBanner />}
           
           <header className="header-fb sticky top-0 z-40">
