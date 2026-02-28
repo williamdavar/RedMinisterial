@@ -96,6 +96,8 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         auth = firebase.auth();
         db = firebase.firestore();
+        // MILAGRO APLICADO: Forzar long-polling para evitar errores de conexión al backend de Firestore
+        db.settings({ experimentalForceLongPolling: true });
     }
     
     const appId = "comunidad-davar-v2026-arca-final"; 
@@ -290,7 +292,6 @@
           }
       };
 
-      // --- MILAGRO DEL AUDIO FRAGMENTADO Y ETIQUETADO ---
       const startVoice = async () => {
         setIsPostDialogOpen(true);
         setSysMsg('');
@@ -310,7 +311,6 @@
           
           mr.onstop = () => { 
             clearInterval(timerRef.current);
-            // El milagro del formato: Le ponemos su etiqueta correcta para que se escuche
             const audioType = mr.mimeType || 'audio/webm';
             const b = new Blob(audioChunks.current, { type: audioType }); 
             const r = new FileReader(); 
@@ -323,7 +323,6 @@
             setRecordingTime(0);
           };
           
-          // El milagro de la recolección: Recoge fragmentos cada 500 milisegundos para no perder nada
           mr.start(500); 
           setAudioState('recording'); 
           
