@@ -24,7 +24,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
   <style>
-    /* Restauración del Tema Blanco y Azul Estilo Facebook */
     :root { --fb-blue: #1877F2; --fb-bg: #F0F2F5; --fb-white: #FFFFFF; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--fb-bg); margin: 0; color: #1C1E21; overflow: hidden; height: 100vh; }
     
@@ -55,9 +54,12 @@
     .animate-up { animation: slideUp 0.3s ease-out forwards; }
     @keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
+    /* ESTILOS DE REACCIONES (CON PUNTOS ROJOS) */
     .reac-btn { font-size: 13px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px; font-weight: bold; color: #65676B; cursor: pointer; border: none; background: none; padding: 6px 8px; border-radius: 6px; flex: 1; }
     .reac-btn:hover { background: #F2F2F2; }
-    .reac-btn.active { color: var(--fb-blue); }
+    .reac-btn.active-amen { color: #D4AF37; }
+    .reac-btn.active-bendice { color: #E41E3F; }
+    .reac-badge { position: absolute; top: -8px; right: -16px; background-color: #E41E3F; color: white; font-size: 10px; font-weight: 900; padding: 2px 5px; border-radius: 12px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); line-height: 1; z-index: 10; min-width: 20px; text-align: center; }
     .reactions-mini { display: flex; gap: 6px; padding: 4px; width: fit-content; margin-top: 4px; }
     
     .profile-cover { width: 100%; height: 180px; background: #E4E6EB; border-radius: 12px 12px 0 0; object-fit: cover; }
@@ -96,7 +98,6 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         auth = firebase.auth();
         db = firebase.firestore();
-        // MILAGRO APLICADO: Forzar long-polling para evitar errores de conexión al backend de Firestore
         db.settings({ experimentalForceLongPolling: true });
     }
     
@@ -154,7 +155,7 @@
       return <a href={url} target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-xl border border-blue-100 block text-blue-600 font-bold truncate text-[11px] mb-2"><i className="fa-solid fa-link mr-2"></i> Abrir contenido externo</a>;
     };
 
-    // --- SESIÓN EN VIVO DIRECTA Y SIN PANTALLAS PREVIAS ---
+    // --- SESIÓN EN VIVO DIRECTA Y SIN BOTÓN VERDE ---
     const LiveSession = ({ profile, broadcasterId, isBroadcaster, onClose }) => {
       const roomName = `DavarMinisterio_${broadcasterId}`;
       const [chatMsgs, setChatMsgs] = useState([]);
@@ -164,6 +165,7 @@
       let liveCol = db ? db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives') : null;
       let chatCol = db ? db.collection('artifacts').doc(appId).collection('public').doc('data').collection('live_chats').doc(broadcasterId).collection('messages') : null;
 
+      // EL MILAGRO: Al montar este componente, se abre Jitsi y se registra en la nube inmediatamente
       useEffect(() => {
         if (isBroadcaster && liveCol) {
           liveCol.doc(broadcasterId).set({ 
@@ -207,14 +209,17 @@
           setNewMsg('');
       };
 
+      // Motor ultraligero
       const jitsiUrl = `https://meet.jit.si/${roomName}#config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.disableDeepLinking=true&config.prejoinPageEnabled=false&config.resolution=360&config.videoQuality.maxBitratesVideo=500&config.disableVideoBackground=true&config.startBitrate=400&config.disableAudioLevels=true&config.disableSimulcast=true`;
 
       return (
         <div className="live-overlay animate-in z-[6000]">
           <div className="flex-1 bg-black relative flex flex-col items-center justify-center overflow-hidden">
 
+            {/* TRANSMISIÓN EN VIVO REAL (JITSI ABRE DE INMEDIATO) */}
             <iframe src={jitsiUrl} className="absolute inset-0 w-full h-full border-none z-10" allow="camera; microphone; fullscreen; display-capture; autoplay" />
 
+            {/* ENCABEZADO DURANTE EL VIVO */}
             <div className="absolute top-10 left-6 flex items-center gap-3 bg-black/80 p-2 pr-5 rounded-full backdrop-blur-md border border-white/20 shadow-lg z-20">
                <img src={profile?.photo || LOGO_URL} className="h-10 w-10 rounded-full border-2 border-[#1877F2] object-cover bg-white" onError={(e)=>{e.target.src=LOGO_URL}} />
                <div>
@@ -223,6 +228,7 @@
                </div>
             </div>
             
+            {/* CHAT EN VIVO TRANSPARENTE */}
             <div className="live-chat-overlay no-scrollbar z-20">
                 {chatMsgs.map(m => (
                     <div key={m.id} className="live-chat-msg">
@@ -233,6 +239,7 @@
                 <div ref={chatEndRef} />
             </div>
             
+            {/* CAJA DE TEXTO DEL CHAT */}
             <div className="live-chat-input-area z-20">
                 <input type="text" value={newMsg} onChange={e=>setNewMsg(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendMsg()} placeholder="Escriba un amén..." className="flex-1 bg-black/60 text-white placeholder-gray-300 px-5 py-3 rounded-full outline-none border border-white/20 backdrop-blur-md text-[16px] shadow-lg" />
                 <button onClick={sendMsg} className="w-12 h-12 bg-[#1877F2] text-white rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-lg border border-blue-400 shrink-0">
@@ -240,6 +247,7 @@
                 </button>
             </div>
 
+            {/* BOTÓN ROJO PARA FINALIZAR EL VIVO */}
             <div className="absolute right-4 bottom-[80px] z-20 flex flex-col gap-4">
               {isBroadcaster ? (
                   <button onClick={stopStream} className="btn-circle-mini bg-red-600 text-white shadow-2xl animate-pulse ring-4 ring-red-600/30" title="Finalizar Transmisión">
@@ -367,7 +375,7 @@
       };
 
       const sendPost = async () => {
-        if(loading || (!txt.trim() && !img && !audio && !linkUrl && !location && !tag)) return;
+        if(loading || (!txt.trim() && !img && !audio && !linkUrl && !location && !tag) || !postCol) return;
         setLoading(true); setSysMsg('');
         
         let finalTxt = txt;
@@ -490,15 +498,29 @@
                 <button disabled={!profile || !isUnlocked} onClick={async()=>{
                     if(!postCol) return;
                     const rs = { ...(p.reactions || {}) };
-                    if (rs[user.uid] === 'amen') delete rs[user.uid]; else rs[user.uid] = 'amen';
+                    if (rs[user?.uid] === 'amen') delete rs[user?.uid]; else rs[user?.uid] = 'amen';
                     await postCol.doc(p.id).update({ reactions: rs });
-                }} className={`reac-btn ${p.reactions?.[user?.uid]==='amen'?'active-amen':''}`}><i className="fa-solid fa-hands-praying text-lg"></i> <span className="text-[11px] font-bold">Amén</span> <span className="text-xs ml-1 font-black">{Object.values(p.reactions||{}).filter(r=>r==='amen').length || ''}</span></button>
+                }} className={`reac-btn ${p.reactions?.[user?.uid]==='amen'?'active-amen':''}`}>
+                    <div className="relative flex items-center justify-center gap-2 px-2">
+                        <i className="fa-solid fa-hands-praying text-xl"></i> <span className="text-[12px] font-black uppercase">Amén</span>
+                        {Object.values(p.reactions||{}).filter(r=>r==='amen').length > 0 && (
+                            <span className="reac-badge">{Object.values(p.reactions||{}).filter(r=>r==='amen').length}</span>
+                        )}
+                    </div>
+                </button>
                 <button disabled={!profile || !isUnlocked} onClick={async()=>{
                     if(!postCol) return;
                     const rs = { ...(p.reactions || {}) };
-                    if (rs[user.uid] === 'bendice') delete rs[user.uid]; else rs[user.uid] = 'bendice';
+                    if (rs[user?.uid] === 'bendice') delete rs[user?.uid]; else rs[user?.uid] = 'bendice';
                     await postCol.doc(p.id).update({ reactions: rs });
-                }} className={`reac-btn ${p.reactions?.[user?.uid]==='bendice'?'active-bendice':''}`}><i className="fa-solid fa-heart text-lg"></i> <span className="text-[11px] font-bold">Bendice</span> <span className="text-xs ml-1 font-black">{Object.values(p.reactions||{}).filter(r=>r==='bendice').length || ''}</span></button>
+                }} className={`reac-btn ${p.reactions?.[user?.uid]==='bendice'?'active-bendice':''}`}>
+                    <div className="relative flex items-center justify-center gap-2 px-2">
+                        <i className="fa-solid fa-heart text-xl"></i> <span className="text-[12px] font-black uppercase">Bendice</span>
+                        {Object.values(p.reactions||{}).filter(r=>r==='bendice').length > 0 && (
+                            <span className="reac-badge">{Object.values(p.reactions||{}).filter(r=>r==='bendice').length}</span>
+                        )}
+                    </div>
+                </button>
               </div>
             </div>
           ))}
@@ -548,17 +570,29 @@
       );
     }
 
+    // --- FORMULARIOS BLINDADOS (SIEMPRE VISIBLES, PROTEGIDOS CON AVISO) ---
+
     function WisdomView({ user, profile, isUnlocked, isAdmin }) {
       const [items, setItems] = useState([]);
       const [showForm, setShowForm] = useState(false);
       const [title, setTitle] = useState('');
       const [content, setContent] = useState('');
+      const [sysMsg, setSysMsg] = useState('');
 
       useEffect(() => { 
           if(!db) return;
           const unsub = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('wisdom').onSnapshot(s => setItems(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at)), err => console.log(err)); 
           return ()=>unsub(); 
       }, []);
+
+      const handleToggle = () => {
+          if (!profile || !isUnlocked) {
+              setSysMsg("⚠️ Acción bloqueada: Ingrese a 'Perfil' con su PIN para publicar.");
+              setTimeout(() => setSysMsg(''), 5000);
+          } else {
+              setShowForm(!showForm);
+          }
+      };
 
       const handleAdd = async () => {
           if(!title.trim() || !content.trim() || !user || !profile) return;
@@ -575,20 +609,20 @@
             <h2 className="font-black text-xl text-gray-800 uppercase tracking-tighter italic">Sabiduría Ministerial</h2>
           </div>
 
-          {isUnlocked && (
-              <div className="mb-4">
-                 <button onClick={() => setShowForm(!showForm)} className="w-full bg-white border-2 border-[#1877F2] text-[#1877F2] font-black py-4 rounded-xl shadow-sm uppercase text-[12px] active:scale-95 transition-transform flex items-center justify-center gap-2">
-                    <i className={`fa-solid ${showForm ? 'fa-xmark text-red-500' : 'fa-plus'}`}></i> {showForm ? 'Cancelar' : 'Compartir Sabiduría'}
-                 </button>
-                 {showForm && (
-                    <div className="mt-3 card-fb p-5 animate-in shadow-lg border border-gray-200">
-                       <input placeholder="Tema o Título..." value={title} onChange={e=>setTitle(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-3 outline-none font-bold text-gray-800 text-[16px]" />
-                       <textarea placeholder="Escriba la palabra de sabiduría..." value={content} onChange={e=>setContent(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-4 outline-none h-32 resize-none text-gray-800 text-[16px]" />
-                       <button onClick={handleAdd} className="w-full bg-[#1877F2] text-white font-black py-4 rounded-xl shadow-md uppercase text-[12px] active:scale-95 transition-transform">Publicar Semilla</button>
-                    </div>
-                 )}
-              </div>
-          )}
+          {sysMsg && <div className="bg-red-50 text-red-600 p-4 rounded-xl text-center text-[11px] font-black shadow-inner border border-red-100 mb-4">{sysMsg}</div>}
+
+          <div className="mb-4">
+             <button onClick={handleToggle} className="w-full bg-white border-2 border-[#1877F2] text-[#1877F2] font-black py-4 rounded-xl shadow-sm uppercase text-[12px] active:scale-95 transition-transform flex items-center justify-center gap-2">
+                <i className={`fa-solid ${showForm ? 'fa-xmark text-red-500' : 'fa-plus'}`}></i> {showForm ? 'Cancelar' : 'Compartir Sabiduría'}
+             </button>
+             {showForm && (
+                <div className="mt-3 card-fb p-5 animate-in shadow-lg border border-gray-200">
+                   <input placeholder="Tema o Título..." value={title} onChange={e=>setTitle(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-3 outline-none font-bold text-gray-800 text-[16px]" />
+                   <textarea placeholder="Escriba la palabra de sabiduría..." value={content} onChange={e=>setContent(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-4 outline-none h-32 resize-none text-gray-800 text-[16px]" />
+                   <button onClick={handleAdd} className="w-full bg-[#1877F2] text-white font-black py-4 rounded-xl shadow-md uppercase text-[12px] active:scale-95 transition-transform">Publicar Semilla</button>
+                </div>
+             )}
+          </div>
 
           {items.length === 0 && (
              <div className="text-center p-10 opacity-40">
@@ -616,11 +650,21 @@
       const [showForm, setShowForm] = useState(false);
       const [title, setTitle] = useState('');
       const [content, setContent] = useState('');
+      const [sysMsg, setSysMsg] = useState('');
 
       useEffect(() => { 
           if(!db) return;
           const unsub = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('devotionals').onSnapshot(s => setDevs(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at)), err => console.log(err)); return ()=>unsub(); 
       }, []);
+
+      const handleToggle = () => {
+          if (!profile || !isUnlocked) {
+              setSysMsg("⚠️ Acción bloqueada: Ingrese a 'Perfil' con su PIN para publicar.");
+              setTimeout(() => setSysMsg(''), 5000);
+          } else {
+              setShowForm(!showForm);
+          }
+      };
 
       const handleAdd = async () => {
           if(!title.trim() || !content.trim() || !user || !profile) return;
@@ -637,20 +681,20 @@
             <h2 className="font-black text-xl text-gray-800 uppercase tracking-tighter italic">Prédica Diaria</h2>
           </div>
 
-          {isUnlocked && (
-              <div className="mb-4">
-                 <button onClick={() => setShowForm(!showForm)} className="w-full bg-white border-2 border-[#1877F2] text-[#1877F2] font-black py-4 rounded-xl shadow-sm uppercase text-[12px] active:scale-95 transition-transform flex items-center justify-center gap-2">
-                    <i className={`fa-solid ${showForm ? 'fa-xmark text-red-500' : 'fa-plus'}`}></i> {showForm ? 'Cancelar' : 'Añadir Prédica'}
-                 </button>
-                 {showForm && (
-                    <div className="mt-3 card-fb p-5 animate-in shadow-lg border border-gray-200">
-                       <input placeholder="Título de la Prédica..." value={title} onChange={e=>setTitle(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-3 outline-none font-bold text-gray-800 text-[16px]" />
-                       <textarea placeholder="Escriba la enseñanza..." value={content} onChange={e=>setContent(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-4 outline-none h-40 resize-none text-gray-800 text-[16px]" />
-                       <button onClick={handleAdd} className="w-full bg-[#1877F2] text-white font-black py-4 rounded-xl shadow-md uppercase text-[12px] active:scale-95 transition-transform">Publicar Prédica</button>
-                    </div>
-                 )}
-              </div>
-          )}
+          {sysMsg && <div className="bg-red-50 text-red-600 p-4 rounded-xl text-center text-[11px] font-black shadow-inner border border-red-100 mb-4">{sysMsg}</div>}
+
+          <div className="mb-4">
+             <button onClick={handleToggle} className="w-full bg-white border-2 border-[#1877F2] text-[#1877F2] font-black py-4 rounded-xl shadow-sm uppercase text-[12px] active:scale-95 transition-transform flex items-center justify-center gap-2">
+                <i className={`fa-solid ${showForm ? 'fa-xmark text-red-500' : 'fa-plus'}`}></i> {showForm ? 'Cancelar' : 'Añadir Prédica'}
+             </button>
+             {showForm && (
+                <div className="mt-3 card-fb p-5 animate-in shadow-lg border border-gray-200">
+                   <input placeholder="Título de la Prédica..." value={title} onChange={e=>setTitle(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-3 outline-none font-bold text-gray-800 text-[16px]" />
+                   <textarea placeholder="Escriba la enseñanza..." value={content} onChange={e=>setContent(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-4 outline-none h-40 resize-none text-gray-800 text-[16px]" />
+                   <button onClick={handleAdd} className="w-full bg-[#1877F2] text-white font-black py-4 rounded-xl shadow-md uppercase text-[12px] active:scale-95 transition-transform">Publicar Prédica</button>
+                </div>
+             )}
+          </div>
 
           {devs.length === 0 && (
              <div className="text-center p-10 opacity-40">
@@ -678,6 +722,7 @@
       const [showForm, setShowForm] = useState(false);
       const [name, setName] = useState('');
       const [desc, setDesc] = useState('');
+      const [sysMsg, setSysMsg] = useState('');
 
       useEffect(() => { 
           if(!user || !db) return; 
@@ -685,6 +730,15 @@
           const unsub = colG.onSnapshot(s => setGroups(s.docs.map(d=>({id:d.id, ...d.data()}))), err => console.log(err)); 
           return ()=>unsub(); 
       }, [user]);
+
+      const handleToggle = () => {
+          if (!profile || !isUnlocked) {
+              setSysMsg("⚠️ Acción bloqueada: Ingrese a 'Perfil' con su PIN para crear.");
+              setTimeout(() => setSysMsg(''), 5000);
+          } else {
+              setShowForm(!showForm);
+          }
+      };
 
       const handleAdd = async () => {
           if(!name.trim() || !desc.trim() || !user || !profile) return;
@@ -701,20 +755,20 @@
              <h2 className="font-black text-lg text-gray-800 uppercase italic">Grupos Bíblicos</h2>
           </div>
 
-          {isUnlocked && (
-              <div className="mb-4">
-                 <button onClick={() => setShowForm(!showForm)} className="w-full bg-white border-2 border-blue-500 text-blue-600 font-black py-4 rounded-xl shadow-sm uppercase text-[12px] active:scale-95 transition-transform flex items-center justify-center gap-2">
-                    <i className={`fa-solid ${showForm ? 'fa-xmark text-red-500' : 'fa-plus'}`}></i> {showForm ? 'Cancelar' : 'Crear Grupo'}
-                 </button>
-                 {showForm && (
-                    <div className="mt-3 card-fb p-5 animate-in shadow-lg border border-gray-200">
-                       <input placeholder="Nombre del Grupo..." value={name} onChange={e=>setName(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-3 outline-none font-bold text-gray-800 text-[16px]" />
-                       <textarea placeholder="Descripción o Enlace de WhatsApp..." value={desc} onChange={e=>setDesc(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-4 outline-none h-24 resize-none text-gray-800 text-[16px]" />
-                       <button onClick={handleAdd} className="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-md uppercase text-[12px] active:scale-95 transition-transform">Crear Grupo</button>
-                    </div>
-                 )}
-              </div>
-          )}
+          {sysMsg && <div className="bg-red-50 text-red-600 p-4 rounded-xl text-center text-[11px] font-black shadow-inner border border-red-100 mb-4">{sysMsg}</div>}
+
+          <div className="mb-4">
+             <button onClick={handleToggle} className="w-full bg-white border-2 border-blue-500 text-blue-600 font-black py-4 rounded-xl shadow-sm uppercase text-[12px] active:scale-95 transition-transform flex items-center justify-center gap-2">
+                <i className={`fa-solid ${showForm ? 'fa-xmark text-red-500' : 'fa-plus'}`}></i> {showForm ? 'Cancelar' : 'Crear Grupo'}
+             </button>
+             {showForm && (
+                <div className="mt-3 card-fb p-5 animate-in shadow-lg border border-gray-200">
+                   <input placeholder="Nombre del Grupo..." value={name} onChange={e=>setName(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-3 outline-none font-bold text-gray-800 text-[16px]" />
+                   <textarea placeholder="Descripción o Enlace de WhatsApp..." value={desc} onChange={e=>setDesc(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl mb-4 outline-none h-24 resize-none text-gray-800 text-[16px]" />
+                   <button onClick={handleAdd} className="w-full bg-blue-600 text-white font-black py-4 rounded-xl shadow-md uppercase text-[12px] active:scale-95 transition-transform">Crear Grupo</button>
+                </div>
+             )}
+          </div>
 
           {groups.length === 0 && (
              <div className="text-center p-10 opacity-40">
@@ -742,6 +796,7 @@
       const [name, setName] = useState('');
       const [price, setPrice] = useState('');
       const [img, setImg] = useState('');
+      const [sysMsg, setSysMsg] = useState('');
 
       useEffect(() => { 
           if(!user || !db) return; 
@@ -749,6 +804,15 @@
           const unsub = colS.onSnapshot(s => setItems(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at)), err => console.log(err)); 
           return ()=>unsub(); 
       }, [user]);
+
+      const handleToggle = () => {
+          if (!profile || !isUnlocked) {
+              setSysMsg("⚠️ Acción bloqueada: Ingrese a 'Perfil' con su PIN para vender.");
+              setTimeout(() => setSysMsg(''), 5000);
+          } else {
+              setShowForm(!showForm);
+          }
+      };
 
       const handleAdd = async () => {
           if(!name.trim() || !price.trim() || !img || !user || !profile) return;
@@ -765,26 +829,26 @@
              <h2 className="font-black text-lg text-gray-800 uppercase italic">Tienda Davar</h2>
           </div>
 
-          {isUnlocked && (
-              <div className="mb-4 max-w-[650px] mx-auto">
-                 <button onClick={() => setShowForm(!showForm)} className="w-full bg-white border-2 border-green-500 text-green-600 font-black py-4 rounded-xl shadow-sm uppercase text-[12px] active:scale-95 transition-transform flex items-center justify-center gap-2">
-                    <i className={`fa-solid ${showForm ? 'fa-xmark text-red-500' : 'fa-plus'}`}></i> {showForm ? 'Cancelar' : 'Agregar Producto'}
-                 </button>
-                 {showForm && (
-                    <div className="mt-3 card-fb p-5 animate-in shadow-lg border border-gray-200 flex flex-col gap-4">
-                       <label className="bg-gray-50 hover:bg-gray-100 transition-colors p-6 rounded-2xl text-center cursor-pointer border-2 border-dashed border-gray-300">
-                          <i className={`fa-solid ${img ? 'fa-check-circle text-green-500' : 'fa-camera text-gray-400'} text-4xl mb-2 block`}></i>
-                          <span className="text-[14px] font-bold text-gray-600">{img ? 'Imagen Lista' : 'Subir Foto del Producto'}</span>
-                          <input type="file" className="hidden" accept="image/*" onChange={async e=>setImg(await compressMedia(e.target.files[0]))} />
-                       </label>
-                       {img && <img src={img} className="h-32 object-contain rounded-xl shadow-md border border-gray-200" />}
-                       <input placeholder="Nombre del Producto..." value={name} onChange={e=>setName(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl outline-none font-bold text-gray-800 text-[16px]" />
-                       <input type="number" placeholder="Precio (Ej: 10000)" value={price} onChange={e=>setPrice(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl outline-none font-bold text-gray-800 text-[16px]" />
-                       <button onClick={handleAdd} className="w-full bg-green-500 text-white font-black py-4 rounded-xl shadow-md uppercase text-[12px] active:scale-95 transition-transform">Publicar en Tienda</button>
-                    </div>
-                 )}
-              </div>
-          )}
+          {sysMsg && <div className="bg-red-50 text-red-600 p-4 rounded-xl text-center text-[11px] font-black shadow-inner border border-red-100 mb-4 max-w-[650px] mx-auto">{sysMsg}</div>}
+
+          <div className="mb-4 max-w-[650px] mx-auto">
+             <button onClick={handleToggle} className="w-full bg-white border-2 border-green-500 text-green-600 font-black py-4 rounded-xl shadow-sm uppercase text-[12px] active:scale-95 transition-transform flex items-center justify-center gap-2">
+                <i className={`fa-solid ${showForm ? 'fa-xmark text-red-500' : 'fa-plus'}`}></i> {showForm ? 'Cancelar' : 'Agregar Producto'}
+             </button>
+             {showForm && (
+                <div className="mt-3 card-fb p-5 animate-in shadow-lg border border-gray-200 flex flex-col gap-4">
+                   <label className="bg-gray-50 hover:bg-gray-100 transition-colors p-6 rounded-2xl text-center cursor-pointer border-2 border-dashed border-gray-300">
+                      <i className={`fa-solid ${img ? 'fa-check-circle text-green-500' : 'fa-camera text-gray-400'} text-4xl mb-2 block`}></i>
+                      <span className="text-[14px] font-bold text-gray-600">{img ? 'Imagen Lista' : 'Subir Foto del Producto'}</span>
+                      <input type="file" className="hidden" accept="image/*" onChange={async e=>setImg(await compressMedia(e.target.files[0]))} />
+                   </label>
+                   {img && <img src={img} className="h-32 object-contain rounded-xl shadow-md border border-gray-200" />}
+                   <input placeholder="Nombre del Producto..." value={name} onChange={e=>setName(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl outline-none font-bold text-gray-800 text-[16px]" />
+                   <input type="number" placeholder="Precio (Ej: 10000)" value={price} onChange={e=>setPrice(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-4 rounded-xl outline-none font-bold text-gray-800 text-[16px]" />
+                   <button onClick={handleAdd} className="w-full bg-green-500 text-white font-black py-4 rounded-xl shadow-md uppercase text-[12px] active:scale-95 transition-transform">Publicar en Tienda</button>
+                </div>
+             )}
+          </div>
 
           {items.length === 0 && (
              <div className="text-center p-10 opacity-40">
@@ -814,7 +878,7 @@
       useEffect(() => { 
           if (!user || !db) return; 
           const colP = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts');
-          const unsub = colP.onSnapshot(s => setMyPosts(s.docs.map(d=>({id:d.id, ...d.data()})).filter(x=>x.uid === user.uid).sort((a,b)=>b.at-a.at)), err => console.log(err)); 
+          const unsub = colP.onSnapshot(s => setMyPosts(s.docs.map(d=>({id:d.id, ...d.data()})).filter(x=> user && x.uid === user.uid).sort((a,b)=>b.at-a.at)), err => console.log(err)); 
           return () => unsub(); 
       }, [user?.uid]);
       return (
