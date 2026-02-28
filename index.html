@@ -139,15 +139,14 @@
       return <a href={url} target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-xl border border-blue-100 block text-blue-600 font-bold truncate text-[11px] mb-2"><i className="fa-solid fa-link mr-2"></i> Abrir contenido externo</a>;
     };
 
-    // --- SESIÓN EN VIVO CON ESPEJO DE CÁMARA LIBERADO ---
+    // --- SESIÓN EN VIVO CORREGIDA SIN RETRASOS ---
     const LiveSession = ({ profile, broadcasterId, isBroadcaster, onClose }) => {
       const roomName = `DavarMinisterio_${broadcasterId}`;
       const [isLive, setIsLive] = useState(!isBroadcaster); 
-      const [camStatus, setCamStatus] = useState('idle'); // idle, granted, denied
+      const [camStatus, setCamStatus] = useState('idle'); 
       const videoRef = useRef(null);
       const streamRef = useRef(null);
 
-      // Solicitud manual de cámara para evitar bloqueos
       const requestCamera = async () => {
          try {
              const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
@@ -161,30 +160,41 @@
       };
 
       useEffect(() => {
-        // Limpiar cámara local al desmontar
         return () => {
           if (streamRef.current) {
             streamRef.current.getTracks().forEach(t => t.stop());
           }
+          if (isBroadcaster && db && isLive) {
+              db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').doc(broadcasterId).delete();
+          }
         };
-      }, []);
+      }, [isLive]);
 
       const startStream = () => {
-         // MILAGRO DE LIBERACIÓN: Apagamos la cámara local ANTES de iniciar Jitsi para evitar conflictos
+         // MILAGRO APLICADO: Al tocar el botón verde, apagamos la cámara previa INMEDIATAMENTE
          if (streamRef.current) {
              streamRef.current.getTracks().forEach(t => t.stop());
              streamRef.current = null;
          }
+         if (videoRef.current) {
+             videoRef.current.srcObject = null;
+         }
          
-         // Esperamos un momento a que el celular libere el hardware y luego abrimos la transmisión
-         setTimeout(() => {
-             setIsLive(true);
-             if (db) db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').doc(broadcasterId).set({ uid: broadcasterId, name: profile.name, photo: profile.photo || LOGO_URL, at: Date.now() });
-         }, 500);
+         // Y activamos la transmisión en vivo de forma sincrónica, sin pausas, para que el celular no bloquee
+         setIsLive(true);
+         
+         if (db) {
+             db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').doc(broadcasterId).set({ 
+                 uid: broadcasterId, 
+                 name: profile.name, 
+                 photo: profile.photo || LOGO_URL, 
+                 at: Date.now() 
+             });
+         }
       };
 
       const stopStream = async () => {
-         if (isBroadcaster && isLive) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').doc(broadcasterId).delete();
+         if (isBroadcaster && isLive && db) await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').doc(broadcasterId).delete();
          onClose();
       };
 
@@ -222,14 +232,22 @@
                </>
             )}
 
+            {/* PANTALLA DE CARGA MIENTRAS JITSI CONECTA */}
+            {isLive && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-0">
+                    <i className="fa-solid fa-spinner fa-spin text-5xl text-[#1877F2] mb-4"></i>
+                    <p className="text-white font-bold text-sm tracking-widest uppercase animate-pulse">Conectando Transmisión...</p>
+                </div>
+            )}
+
             {/* TRANSMISIÓN EN VIVO REAL (JITSI) */}
             {isLive && (
-                <iframe src={`https://meet.jit.si/${roomName}#config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.disableDeepLinking=true&config.prejoinPageEnabled=false`} className="w-full h-full border-none" allow="camera; microphone; fullscreen; display-capture; autoplay" />
+                <iframe src={`https://meet.jit.si/${roomName}#config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.disableDeepLinking=true&config.prejoinPageEnabled=false`} className="w-full h-full border-none relative z-10" allow="camera; microphone; fullscreen; display-capture; autoplay" />
             )}
 
             {/* ENCABEZADO DURANTE EL VIVO */}
             {isLive && (
-                <div className="absolute top-10 left-6 flex items-center gap-3 bg-black/60 p-2 pr-5 rounded-full backdrop-blur-md border border-white/20 shadow-lg">
+                <div className="absolute top-10 left-6 flex items-center gap-3 bg-black/80 p-2 pr-5 rounded-full backdrop-blur-md border border-white/20 shadow-lg z-20">
                    <img src={profile?.photo || LOGO_URL} className="h-10 w-10 rounded-full border-2 border-[#1877F2] object-cover bg-white" onError={(e)=>{e.target.src=LOGO_URL}} />
                    <div>
                       <p className="text-white font-black text-xs uppercase leading-none">{profile?.name || "Visitante"}</p>
@@ -240,7 +258,7 @@
             
             {/* BOTÓN PARA FINALIZAR EL VIVO */}
             {isLive && (
-                <div className="live-controls-side">
+                <div className="live-controls-side z-20">
                   {isBroadcaster ? (
                       <button onClick={stopStream} className="btn-circle-mini bg-red-600 text-white shadow-2xl animate-pulse ring-4 ring-red-600/30" title="Finalizar Transmisión">
                           <i className="fa-solid fa-phone-slash text-2xl"></i>
@@ -727,7 +745,6 @@
           deferredPrompt.prompt();
           deferredPrompt.userChoice.then(() => setDeferredPrompt(null));
         } else {
-          // Si el celular bloquea el prompt automático (como en iPhone), mostramos nuestro panel visual
           setShowInstallModal(true);
         }
       };
@@ -831,7 +848,7 @@
                 <div className="bg-white p-6 rounded-3xl w-full max-w-sm text-center shadow-2xl relative border-t-4 border-[#1877F2]">
                     <button onClick={() => setShowInstallModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-800 active:scale-90"><i className="fa-solid fa-xmark text-2xl"></i></button>
                     
-                    <img src={LOGO_URL} className="w-20 h-20 rounded-full mx-auto mb-4 shadow-md border-2 border-gray-100" />
+                    <img src={LOGO_URL} className="w-20 h-20 rounded-full mx-auto mb-4 shadow-md border-2 border-gray-100 bg-white" />
                     <h3 className="text-[#1877F2] font-black text-xl uppercase tracking-tighter mb-2">Instalar Aplicación</h3>
                     <p className="text-gray-600 text-sm mb-6 leading-relaxed">Para tener la Red Davar en su pantalla de inicio y usarla sin entrar al navegador, siga estos pasos:</p>
                     
@@ -843,7 +860,7 @@
                         <div className="h-px bg-gray-200 w-full"></div>
                         <p className="flex items-start gap-3">
                             <span className="text-2xl">🤖</span> 
-                            <span><b>En Android (Chrome):</b> Toque los 3 puntos <i className="fa-solid fa-ellipsis-vertical text-gray-800 mx-1"></i> arriba a la derecha y elija <b>"Instalar aplicación"</b>.</span>
+                            <span><b>En Android (Chrome):</b> Toque los 3 puntos <i className="fa-solid fa-ellipsis-vertical text-gray-800 mx-1"></i> arriba a la derecha y elija <b>"Agregar a la pantalla principal"</b> o <b>"Instalar aplicación"</b>.</span>
                         </p>
                     </div>
                     
