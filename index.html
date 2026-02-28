@@ -24,7 +24,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
   <style>
-    /* Restauración del Tema Blanco y Azul Estilo Facebook */
     :root { --fb-blue: #1877F2; --fb-bg: #F0F2F5; --fb-white: #FFFFFF; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--fb-bg); margin: 0; color: #1C1E21; overflow: hidden; height: 100vh; }
     
@@ -37,11 +36,14 @@
     .nav-active { background-color: #E7F3FF; color: var(--fb-blue); font-weight: 900; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
 
+    /* ESTILOS DEL VIVO Y CHAT INTEGRADO */
     .live-overlay { position: fixed; inset: 0; background: #000; z-index: 5000; display: flex; flex-direction: column; }
     .btn-circle-mini { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; cursor: pointer; border: 3px solid rgba(255,255,255,0.2); }
     .btn-circle-mini:active { transform: scale(0.9); }
-    .live-controls-side { position: absolute; right: 20px; bottom: 40px; display: flex; flex-direction: column; gap: 20px; z-index: 1010; }
-    .live-chat-msg { background: rgba(255,255,255,0.9); padding: 8px 14px; border-radius: 20px; color: #1C1E21; font-size: 13px; border: 1px solid #dddfe2; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    
+    .live-chat-overlay { position: absolute; bottom: 80px; left: 15px; width: calc(100% - 90px); max-height: 40vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; z-index: 1020; scroll-behavior: smooth; }
+    .live-chat-msg { background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 12px; color: white; font-size: 13px; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); width: fit-content; word-break: break-word; }
+    .live-chat-input-area { position: absolute; bottom: 15px; left: 15px; width: calc(100% - 90px); z-index: 1020; display: flex; gap: 8px; }
     
     .nav-bottom { position: fixed; bottom: 0; width: 100%; height: 70px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #e4e6eb; z-index: 1000; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); padding-bottom: env(safe-area-inset-bottom); }
     .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #65676B; transition: 0.2s; border: none; background: none; outline: none; padding: 6px 0; cursor: pointer; height: 100%; }
@@ -59,6 +61,7 @@
     
     .profile-cover { width: 100%; height: 180px; background: #E4E6EB; border-radius: 12px 12px 0 0; object-fit: cover; }
     .profile-avatar-wrapper { margin-top: -60px; position: relative; display: inline-block; }
+    .comment-bubble { background: #F0F2F5; padding: 8px 12px; border-radius: 18px; font-size: 13px; margin-bottom: 4px; border: 1px solid #dddfe2; }
     
     .emoji-panel { display: grid; grid-template-cols: repeat(6, 1fr); gap: 8px; padding: 12px; background: white; border: 1px solid #ddd; border-radius: 12px; position: absolute; z-index: 100; bottom: 70px; left: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 260px; max-height: 150px; overflow-y: auto; }
     .emoji-item { font-size: 22px; cursor: pointer; text-align: center; padding: 4px; transition: transform 0.1s; }
@@ -139,7 +142,7 @@
       return <a href={url} target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-xl border border-blue-100 block text-blue-600 font-bold truncate text-[11px] mb-2"><i className="fa-solid fa-link mr-2"></i> Abrir contenido externo</a>;
     };
 
-    // --- SESIÓN EN VIVO CORREGIDA SIN RETRASOS ---
+    // --- SESIÓN EN VIVO CORREGIDA (SIN PAUSA, PARA EVITAR PANTALLA NEGRA) ---
     const LiveSession = ({ profile, broadcasterId, isBroadcaster, onClose }) => {
       const roomName = `DavarMinisterio_${broadcasterId}`;
       const [isLive, setIsLive] = useState(!isBroadcaster); 
@@ -171,7 +174,7 @@
       }, [isLive]);
 
       const startStream = () => {
-         // MILAGRO APLICADO: Al tocar el botón verde, apagamos la cámara previa INMEDIATAMENTE
+         // 1. Apagamos la cámara local para soltar el hardware
          if (streamRef.current) {
              streamRef.current.getTracks().forEach(t => t.stop());
              streamRef.current = null;
@@ -180,14 +183,16 @@
              videoRef.current.srcObject = null;
          }
          
-         // Y activamos la transmisión en vivo de forma sincrónica, sin pausas, para que el celular no bloquee
+         // 2. Encendemos el vivo INMEDIATAMENTE de forma síncrona.
+         // Al quitar la pausa, el celular reconoce que usted tocó el botón
+         // y le entrega la cámara a Jitsi sin bloquearse en negro.
          setIsLive(true);
          
          if (db) {
              db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').doc(broadcasterId).set({ 
                  uid: broadcasterId, 
-                 name: profile.name, 
-                 photo: profile.photo || LOGO_URL, 
+                 name: profile?.name || "Visitante", 
+                 photo: profile?.photo || LOGO_URL, 
                  at: Date.now() 
              });
          }
@@ -198,8 +203,36 @@
          onClose();
       };
 
+      // Funciones del Chat Integrado
+      const [chatMsgs, setChatMsgs] = useState([]);
+      const [newMsg, setNewMsg] = useState('');
+      const chatEndRef = useRef(null);
+      let chatCol = db ? db.collection('artifacts').doc(appId).collection('public').doc('data').collection('live_chats').doc(broadcasterId).collection('messages') : null;
+
+      useEffect(() => {
+        if (chatCol && isLive) {
+            const unsubChat = chatCol.orderBy('at', 'asc').limitToLast(40).onSnapshot(s => {
+                setChatMsgs(s.docs.map(d => ({id: d.id, ...d.data()})));
+            });
+            return () => unsubChat();
+        }
+      }, [isLive]);
+
+      useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMsgs]);
+
+      const sendMsg = () => {
+          if(!newMsg.trim() || !chatCol) return;
+          chatCol.add({
+              uid: profile?.uid || 'anonimo',
+              authorName: profile?.name || 'Visitante',
+              text: newMsg.trim(),
+              at: Date.now()
+          });
+          setNewMsg('');
+      };
+
       return (
-        <div className="live-overlay animate-in">
+        <div className="live-overlay animate-in z-[6000]">
           <div className="flex-1 bg-black relative flex flex-col items-center justify-center overflow-hidden">
             
             {/* PANTALLA DE PREPARACIÓN PARA EL LOCUTOR */}
@@ -256,6 +289,27 @@
                 </div>
             )}
             
+            {/* CHAT EN VIVO TRANSPARENTE */}
+            {isLive && (
+                <>
+                <div className="live-chat-overlay no-scrollbar z-20">
+                    {chatMsgs.map(m => (
+                        <div key={m.id} className="live-chat-msg">
+                            <span className="font-black text-[#1877F2] opacity-90">{m.authorName}: </span>
+                            <span className="font-medium text-white">{m.text}</span>
+                        </div>
+                    ))}
+                    <div ref={chatEndRef} />
+                </div>
+                <div className="live-chat-input-area z-20">
+                    <input type="text" value={newMsg} onChange={e=>setNewMsg(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendMsg()} placeholder="Escriba un amén..." className="flex-1 bg-black/60 text-white placeholder-gray-300 px-5 py-3 rounded-full outline-none border border-white/20 backdrop-blur-md text-[14px] shadow-lg" />
+                    <button onClick={sendMsg} className="w-12 h-12 bg-[#1877F2] text-white rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-lg border border-blue-400 shrink-0">
+                        <i className="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+                </>
+            )}
+
             {/* BOTÓN PARA FINALIZAR EL VIVO */}
             {isLive && (
                 <div className="live-controls-side z-20">
@@ -842,7 +896,7 @@
             </div>
           </header>
 
-          {/* VENTANA DE INSTALACIÓN VISUAL (Para iPhone y Android bloqueado) */}
+          {/* VENTANA DE INSTALACIÓN VISUAL */}
           {showInstallModal && (
             <div className="fixed inset-0 bg-black/80 z-[6000] flex items-center justify-center p-4 animate-in">
                 <div className="bg-white p-6 rounded-3xl w-full max-w-sm text-center shadow-2xl relative border-t-4 border-[#1877F2]">
