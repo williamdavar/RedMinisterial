@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#ffffff">
   <title>Comunidad Davar - Red Ministerial</title>
   
-  <!-- Sello de Identidad Permanente (Azul, Blanco y Dorado) -->
+  <!-- Sello de Identidad Permanente -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%231877F2%22%20rx%3D%2240%22%2F%3E%3Ctext%20x%3D%22100%22%20y%3D%22115%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2285%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%22-4%22%3ECD%3C%2Ftext%3E%3Ctext%20x%3D%22100%22%20y%3D%22160%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2226%22%20fill%3D%22%23D4AF37%22%20text-anchor%3D%22middle%22%20text-transform%3D%22uppercase%22%20letter-spacing%3D%222%22%3EDios%3C%2Ftext%3E%3C%2Fsvg%3E">
   <link rel="apple-touch-icon" href="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%231877F2%22%20rx%3D%2240%22%2F%3E%3Ctext%20x%3D%22100%22%20y%3D%22115%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2285%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%22-4%22%3ECD%3C%2Ftext%3E%3Ctext%20x%3D%22100%22%20y%3D%22160%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2226%22%20fill%3D%22%23D4AF37%22%20text-anchor%3D%22middle%22%20text-transform%3D%22uppercase%22%20letter-spacing%3D%222%22%3EDios%3C%2Ftext%3E%3C%2Fsvg%3E">
   <meta name="mobile-web-app-capable" content="yes">
@@ -22,6 +22,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
   <style>
     :root { --fb-blue: #1877F2; --fb-bg: #F0F2F5; --fb-white: #FFFFFF; }
@@ -54,17 +55,12 @@
     .animate-up { animation: slideUp 0.3s ease-out forwards; }
     @keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-    /* ESTILOS DE REACCIONES (CON PUNTOS ROJOS) */
+    /* ESTILOS DE REACCIONES */
     .reac-btn { font-size: 13px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px; font-weight: bold; color: #65676B; cursor: pointer; border: none; background: none; padding: 6px 8px; border-radius: 6px; flex: 1; }
     .reac-btn:hover { background: #F2F2F2; }
     .reac-btn.active-amen { color: #D4AF37; }
     .reac-btn.active-bendice { color: #E41E3F; }
     .reac-badge { position: absolute; top: -8px; right: -16px; background-color: #E41E3F; color: white; font-size: 10px; font-weight: 900; padding: 2px 5px; border-radius: 12px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); line-height: 1; z-index: 10; min-width: 20px; text-align: center; }
-    .reactions-mini { display: flex; gap: 6px; padding: 4px; width: fit-content; margin-top: 4px; }
-    
-    .profile-cover { width: 100%; height: 180px; background: #E4E6EB; border-radius: 12px 12px 0 0; object-fit: cover; }
-    .profile-avatar-wrapper { margin-top: -60px; position: relative; display: inline-block; }
-    .comment-bubble { background: #F0F2F5; padding: 8px 12px; border-radius: 18px; font-size: 13px; margin-bottom: 4px; border: 1px solid #dddfe2; }
     
     .emoji-panel { display: grid; grid-template-cols: repeat(6, 1fr); gap: 8px; padding: 12px; background: white; border: 1px solid #ddd; border-radius: 12px; position: absolute; z-index: 100; bottom: 70px; left: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 260px; max-height: 150px; overflow-y: auto; }
     .emoji-item { font-size: 22px; cursor: pointer; text-align: center; padding: 4px; transition: transform 0.1s; }
@@ -92,18 +88,19 @@
 
     let auth = null;
     let db = null;
+    let storage = null; // INICIALIZAMOS EL ALMACENAMIENTO DE VIDEOS
     const isInvalidKey = !firebaseConfig.apiKey || firebaseConfig.apiKey.includes("PEGUE") || firebaseConfig.apiKey === "";
 
     if (!isInvalidKey) {
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         auth = firebase.auth();
         db = firebase.firestore();
+        storage = firebase.storage(); // ACTIVAMOS STORAGE
         db.settings({ experimentalForceLongPolling: true });
     }
     
     const appId = "comunidad-davar-v2026-arca-final"; 
     
-    // LOGOS Y PORTADAS
     const LOGO_URL = "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%231877F2%22%20rx%3D%2240%22%2F%3E%3Ctext%20x%3D%22100%22%20y%3D%22115%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2285%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%22-4%22%3ECD%3C%2Ftext%3E%3Ctext%20x%3D%22100%22%20y%3D%22160%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2226%22%20fill%3D%22%23D4AF37%22%20text-anchor%3D%22middle%22%20text-transform%3D%22uppercase%22%20letter-spacing%3D%222%22%3EDios%3C%2Ftext%3E%3C%2Fsvg%3E";
     const DEFAULT_COVER = "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221000%22%20height%3D%22400%22%3E%3Crect%20width%3D%221000%22%20height%3D%22400%22%20fill%3D%22%23E4E6EB%22%2F%3E%3Cpath%20d%3D%22M0%20400%20L1000%20400%20L1000%20200%20Q500%20350%200%20200%20Z%22%20fill%3D%22%231877F2%22%20opacity%3D%220.1%22%2F%3E%3C%2Fsvg%3E";
 
@@ -125,7 +122,7 @@
           img.src = e.target.result;
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_SIZE = 800; 
+            const MAX_SIZE = 600; 
             let w = img.width, h = img.height;
             if (w > h) { if (w > MAX_SIZE) { h *= MAX_SIZE / w; w = MAX_SIZE; } }
             else { if (h > MAX_SIZE) { w *= MAX_SIZE / h; h = MAX_SIZE; } }
@@ -134,12 +131,12 @@
             const ctx = canvas.getContext('2d');
             
             ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
+            ctx.imageSmoothingQuality = 'medium';
             ctx.drawImage(img, 0, 0, w, h);
             
-            let dataUrl = canvas.toDataURL('image/webp', 0.65);
+            let dataUrl = canvas.toDataURL('image/webp', 0.5);
             if (dataUrl.indexOf('data:image/webp') !== 0) {
-                dataUrl = canvas.toDataURL('image/jpeg', 0.65);
+                dataUrl = canvas.toDataURL('image/jpeg', 0.5);
             }
             resolve(dataUrl); 
           };
@@ -155,17 +152,17 @@
       return <a href={url} target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-xl border border-blue-100 block text-blue-600 font-bold truncate text-[11px] mb-2"><i className="fa-solid fa-link mr-2"></i> Abrir contenido externo</a>;
     };
 
-    // --- SESIÓN EN VIVO DIRECTA Y SIN BOTÓN VERDE ---
+    // --- SESIÓN EN VIVO OPTIMIZADA ---
     const LiveSession = ({ profile, broadcasterId, isBroadcaster, onClose }) => {
       const roomName = `DavarMinisterio_${broadcasterId}`;
       const [chatMsgs, setChatMsgs] = useState([]);
       const [newMsg, setNewMsg] = useState('');
       const chatEndRef = useRef(null);
+      const iframeRef = useRef(null); 
 
       let liveCol = db ? db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives') : null;
       let chatCol = db ? db.collection('artifacts').doc(appId).collection('public').doc('data').collection('live_chats').doc(broadcasterId).collection('messages') : null;
 
-      // EL MILAGRO: Al montar este componente, se abre Jitsi y se registra en la nube inmediatamente
       useEffect(() => {
         if (isBroadcaster && liveCol) {
           liveCol.doc(broadcasterId).set({ 
@@ -176,15 +173,21 @@
           });
         }
         
+        const handleUnload = () => {
+            if (isBroadcaster && liveCol) liveCol.doc(broadcasterId).delete();
+        };
+        window.addEventListener('beforeunload', handleUnload);
+
         let unsubChat = () => {};
         if (chatCol) {
-            unsubChat = chatCol.orderBy('at', 'asc').limitToLast(40).onSnapshot(s => {
+            unsubChat = chatCol.orderBy('at', 'asc').limitToLast(30).onSnapshot(s => {
                 setChatMsgs(s.docs.map(d => ({id: d.id, ...d.data()})));
             });
         }
 
         return () => {
             unsubChat();
+            window.removeEventListener('beforeunload', handleUnload);
             if (isBroadcaster && liveCol) {
                 liveCol.doc(broadcasterId).delete();
             }
@@ -194,8 +197,9 @@
       useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMsgs]);
 
       const stopStream = async () => {
-         if (isBroadcaster && liveCol) await liveCol.doc(broadcasterId).delete();
-         onClose();
+         if (isBroadcaster && liveCol) await liveCol.doc(broadcasterId).delete().catch(()=>{});
+         if (iframeRef.current) iframeRef.current.src = "about:blank";
+         setTimeout(() => onClose(), 150); 
       };
 
       const sendMsg = () => {
@@ -209,18 +213,15 @@
           setNewMsg('');
       };
 
-      // Motor ultraligero
-      const jitsiUrl = `https://meet.jit.si/${roomName}#config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.disableDeepLinking=true&config.prejoinPageEnabled=false&config.resolution=360&config.videoQuality.maxBitratesVideo=500&config.disableVideoBackground=true&config.startBitrate=400&config.disableAudioLevels=true&config.disableSimulcast=true`;
+      const jitsiParams = 'config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.prejoinPageEnabled=false&config.disableDeepLinking=true&config.resolution=360&config.videoQuality.maxBitratesVideo=400&config.startBitrate=300&config.disableAudioLevels=true&config.disableSimulcast=true&config.channelLastN=4&interfaceConfig.TOOLBAR_BUTTONS=%5B%22microphone%22%2C%22camera%22%2C%22toggle-camera%22%5D&interfaceConfig.SHOW_JITSI_WATERMARK=false';
+      const jitsiUrl = `https://meet.jit.si/${roomName}#${jitsiParams}`;
 
       return (
         <div className="live-overlay animate-in z-[6000]">
           <div className="flex-1 bg-black relative flex flex-col items-center justify-center overflow-hidden">
+            <iframe ref={iframeRef} src={jitsiUrl} className="absolute inset-0 w-full h-full border-none z-10" allow="camera; microphone; fullscreen; display-capture; autoplay" />
 
-            {/* TRANSMISIÓN EN VIVO REAL (JITSI ABRE DE INMEDIATO) */}
-            <iframe src={jitsiUrl} className="absolute inset-0 w-full h-full border-none z-10" allow="camera; microphone; fullscreen; display-capture; autoplay" />
-
-            {/* ENCABEZADO DURANTE EL VIVO */}
-            <div className="absolute top-10 left-6 flex items-center gap-3 bg-black/80 p-2 pr-5 rounded-full backdrop-blur-md border border-white/20 shadow-lg z-20">
+            <div className="absolute top-10 left-6 flex items-center gap-3 bg-black/80 p-2 pr-5 rounded-full backdrop-blur-md border border-white/20 shadow-lg z-20 pointer-events-none">
                <img src={profile?.photo || LOGO_URL} className="h-10 w-10 rounded-full border-2 border-[#1877F2] object-cover bg-white" onError={(e)=>{e.target.src=LOGO_URL}} />
                <div>
                   <p className="text-white font-black text-xs uppercase leading-none">{profile?.name || "Visitante"}</p>
@@ -228,8 +229,7 @@
                </div>
             </div>
             
-            {/* CHAT EN VIVO TRANSPARENTE */}
-            <div className="live-chat-overlay no-scrollbar z-20">
+            <div className="live-chat-overlay no-scrollbar z-20 pointer-events-none">
                 {chatMsgs.map(m => (
                     <div key={m.id} className="live-chat-msg">
                         <span className="font-black text-[#1877F2] opacity-90">{m.authorName}: </span>
@@ -239,7 +239,6 @@
                 <div ref={chatEndRef} />
             </div>
             
-            {/* CAJA DE TEXTO DEL CHAT */}
             <div className="live-chat-input-area z-20">
                 <input type="text" value={newMsg} onChange={e=>setNewMsg(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendMsg()} placeholder="Escriba un amén..." className="flex-1 bg-black/60 text-white placeholder-gray-300 px-5 py-3 rounded-full outline-none border border-white/20 backdrop-blur-md text-[16px] shadow-lg" />
                 <button onClick={sendMsg} className="w-12 h-12 bg-[#1877F2] text-white rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-lg border border-blue-400 shrink-0">
@@ -247,7 +246,6 @@
                 </button>
             </div>
 
-            {/* BOTÓN ROJO PARA FINALIZAR EL VIVO */}
             <div className="absolute right-4 bottom-[80px] z-20 flex flex-col gap-4">
               {isBroadcaster ? (
                   <button onClick={stopStream} className="btn-circle-mini bg-red-600 text-white shadow-2xl animate-pulse ring-4 ring-red-600/30" title="Finalizar Transmisión">
@@ -269,6 +267,7 @@
       const [txt, setTxt] = useState(''); const [img, setImg] = useState(''); const [audio, setAudio] = useState('');
       const [location, setLocation] = useState(''); const [tag, setTag] = useState('');
       const [loading, setLoading] = useState(false); const [sysMsg, setSysMsg] = useState('');
+      const [loadingText, setLoadingText] = useState('Subiendo...');
       const [linkInputOpen, setLinkInputOpen] = useState(false); const [linkUrl, setLinkUrl] = useState('');
       const [showEmoji, setShowEmoji] = useState(false);
       
@@ -278,7 +277,18 @@
       const mrRef = useRef(null); 
       const audioChunks = useRef([]); 
       const timerRef = useRef(null);
+
+      // ESTADOS DE VIDEO
+      const [videoFile, setVideoFile] = useState(null);
+      const [videoPreview, setVideoPreview] = useState('');
+      const [uploadProgress, setUploadProgress] = useState(0);
       
+      const [confirmLiveOpen, setConfirmLiveOpen] = useState(false);
+      const [confirmJoinId, setConfirmJoinId] = useState(null);
+
+      const [commentText, setCommentText] = useState({});
+      const [showComments, setShowComments] = useState({});
+
       let postCol;
       if (db) {
         postCol = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts');
@@ -286,7 +296,7 @@
 
       useEffect(() => {
         if(!user || !db || !postCol) return;
-        const u1 = postCol.onSnapshot(s => setPosts(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at)), err => console.log("Muro Error"));
+        const u1 = postCol.onSnapshot(s => setPosts(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at).slice(0,40)), err => console.log("Muro Error"));
         const u2 = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').onSnapshot(s => setLives(s.docs.map(d=>({id:d.id, ...d.data()}))), err => console.log("Vivos Error"));
         return () => { u1(); u2(); };
       }, [user]);
@@ -301,118 +311,175 @@
       };
 
       const startVoice = async () => {
-        setIsPostDialogOpen(true);
-        setSysMsg('');
-        setAudioState('requesting');
-        
+        setIsPostDialogOpen(true); setSysMsg(''); setAudioState('requesting');
         try {
-          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-              throw new Error("El navegador no soporta grabación.");
-          }
-
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error("Sin micrófono.");
           const s = await navigator.mediaDevices.getUserMedia({ audio: true });
-          const mr = new MediaRecorder(s); 
-          mrRef.current = mr; 
-          audioChunks.current = [];
-          
+          const mr = new MediaRecorder(s); mrRef.current = mr; audioChunks.current = [];
           mr.ondataavailable = e => { if (e.data && e.data.size > 0) audioChunks.current.push(e.data); };
-          
           mr.onstop = () => { 
             clearInterval(timerRef.current);
-            const audioType = mr.mimeType || 'audio/webm';
-            const b = new Blob(audioChunks.current, { type: audioType }); 
-            const r = new FileReader(); 
-            r.readAsDataURL(b); 
-            r.onloadend = () => {
-                setAudio(r.result);
-                setAudioState('recorded');
-            }; 
-            s.getTracks().forEach(t => t.stop()); 
-            setRecordingTime(0);
+            const b = new Blob(audioChunks.current, { type: mr.mimeType || 'audio/webm' }); 
+            const r = new FileReader(); r.readAsDataURL(b); 
+            r.onloadend = () => { setAudio(r.result); setAudioState('recorded'); }; 
+            s.getTracks().forEach(t => t.stop()); setRecordingTime(0);
           };
-          
-          mr.start(500); 
-          setAudioState('recording'); 
-          
+          mr.start(500); setAudioState('recording'); 
           timerRef.current = setInterval(() => {
-              setRecordingTime(t => { 
-                  if(t >= 179) { 
-                      if (mrRef.current && mrRef.current.state !== 'inactive') mrRef.current.stop(); 
-                      return 180; 
-                  } 
-                  return t+1; 
-              });
+              setRecordingTime(t => { if(t >= 179) { if (mrRef.current && mrRef.current.state !== 'inactive') mrRef.current.stop(); return 180; } return t+1; });
           }, 1000);
-          
-        } catch(e) { 
-            console.error(e);
-            setAudioState('idle');
-            setSysMsg("⚠️ Por favor, permita el acceso al micrófono en su celular para grabar."); 
-        }
+        } catch(e) { setAudioState('idle'); setSysMsg("⚠️ Por favor, permita el acceso al micrófono en su celular."); }
       };
 
       const cancelAudio = () => {
-          clearInterval(timerRef.current);
-          setRecordingTime(0);
-          if (mrRef.current) {
-              mrRef.current.onstop = null; 
-              if (mrRef.current.state !== 'inactive') mrRef.current.stop();
-              if (mrRef.current.stream) mrRef.current.stream.getTracks().forEach(t => t.stop());
-          }
-          setAudio('');
-          setAudioState('idle');
+          clearInterval(timerRef.current); setRecordingTime(0);
+          if (mrRef.current) { mrRef.current.onstop = null; if (mrRef.current.state !== 'inactive') mrRef.current.stop(); if (mrRef.current.stream) mrRef.current.stream.getTracks().forEach(t => t.stop()); }
+          setAudio(''); setAudioState('idle');
       };
 
       const closeDialog = () => {
-          cancelAudio();
-          setTxt('');
-          setImg('');
-          setLinkUrl('');
-          setLocation('');
-          setTag('');
-          setLinkInputOpen(false);
-          setIsPostDialogOpen(false);
+          cancelAudio(); setTxt(''); setImg(''); setLinkUrl(''); setLocation(''); setTag('');
+          setVideoFile(null); setVideoPreview(''); setUploadProgress(0);
+          setLinkInputOpen(false); setIsPostDialogOpen(false); setLoadingText('Subiendo...');
+      };
+
+      const handleShare = async (post) => {
+          const shareData = {
+              title: 'Bendición en Davar',
+              text: `${post.authorName} compartió una bendición:\n"${post.text || 'Mira este contenido ministerial'}"\n\nÚnete a la Red Ministerial:`,
+              url: window.location.href
+          };
+          if (navigator.share) { try { await navigator.share(shareData); } catch (err) { console.log('Cancelado'); } } 
+          else { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text + " " + shareData.url)}`, '_blank'); }
+      };
+
+      const handleAddComment = async (postId) => {
+          const cTxt = commentText[postId];
+          if (!cTxt || !cTxt.trim() || !profile || !isUnlocked || !postCol) return;
+          try {
+             await postCol.doc(postId).update({ comments: firebase.firestore.FieldValue.arrayUnion({ uid: user.uid, name: profile.name, photo: profile.photo || LOGO_URL, text: cTxt.trim(), at: Date.now() }) });
+             setCommentText({...commentText, [postId]: ''});
+          } catch(e) { setSysMsg("Error al publicar comentario."); setTimeout(()=>setSysMsg(''), 3000); }
       };
 
       const sendPost = async () => {
-        if(loading || (!txt.trim() && !img && !audio && !linkUrl && !location && !tag) || !postCol) return;
-        setLoading(true); setSysMsg('');
+        if(loading || (!txt.trim() && !img && !audio && !linkUrl && !location && !tag && !videoFile) || !postCol) return;
+        setLoading(true); setSysMsg(''); setLoadingText('Preparando bendición...');
         
         let finalTxt = txt;
         if (location) finalTxt += `\n📍 En: ${location}`;
         if (tag) finalTxt += `\n👤 Con: ${tag}`;
         if (linkUrl) finalTxt += `\n🔗 ${linkUrl}`;
 
+        // LÓGICA DE SUBIDA DE VIDEO LIGERO Y CON BARRA DE PROGRESO
+        let uploadedVideoUrl = '';
+        if (videoFile && storage) {
+            try {
+                setLoadingText('Iniciando subida...');
+                const videoRef = storage.ref(`davar_videos/${Date.now()}_${user.uid}`);
+                const uploadTask = videoRef.put(videoFile);
+                
+                // PROMESA PARA ESPERAR LA SUBIDA Y MOSTRAR PROGRESO EN TIEMPO REAL
+                uploadedVideoUrl = await new Promise((resolve, reject) => {
+                    uploadTask.on('state_changed', 
+                        (snapshot) => {
+                            const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                            setUploadProgress(progress);
+                            setLoadingText(`Subiendo video... ${progress}%`);
+                        },
+                        (error) => {
+                            reject(error);
+                        },
+                        async () => {
+                            const url = await uploadTask.snapshot.ref.getDownloadURL();
+                            resolve(url);
+                        }
+                    );
+                });
+            } catch(e) {
+                console.error(e);
+                setSysMsg("Error al subir video. Tal vez la conexión a internet se interrumpió.");
+                setLoading(false); setLoadingText('Subiendo...'); setUploadProgress(0);
+                return;
+            }
+        }
+
         try { 
-          await postCol.add({ uid:user.uid, authorName:profile.name, authorPhoto:profile.photo || LOGO_URL, text:finalTxt, img, audio:audio, at:Date.now(), reactions:{} });
+          await postCol.add({ 
+              uid:user.uid, authorName:profile.name, authorPhoto:profile.photo || LOGO_URL, 
+              text:finalTxt, img, audio:audio, video:uploadedVideoUrl, at:Date.now(), reactions:{}, comments: [] 
+          });
           closeDialog();
         } catch(e) { setSysMsg("Error al subir bendición. Intente de nuevo."); }
-        setLoading(false);
+        setLoading(false); setLoadingText('Subiendo...'); setUploadProgress(0);
       };
 
       return (
         <div className="space-y-4 pb-24 animate-up text-left w-full max-w-[620px] mx-auto mt-2">
+          
+          {confirmLiveOpen && (
+              <div className="fixed inset-0 bg-black/80 z-[7000] flex items-center justify-center p-4">
+                  <div className="bg-white rounded-2xl p-6 text-center shadow-2xl max-w-xs w-full animate-in">
+                      <i className="fa-solid fa-video text-4xl text-red-500 mb-3 animate-pulse"></i>
+                      <h3 className="font-black text-lg text-gray-800 uppercase mb-2">Transmisión Ministerial</h3>
+                      <p className="text-sm text-gray-600 mb-6">¿Desea encender su cámara y transmitir en vivo ahora mismo?</p>
+                      <div className="flex gap-3">
+                          <button onClick={()=>setConfirmLiveOpen(false)} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold uppercase text-xs active:scale-95">Cancelar</button>
+                          <button onClick={()=>{setConfirmLiveOpen(false); onStartLive();}} className="flex-1 bg-red-600 text-white py-3 rounded-xl font-black uppercase text-xs shadow-lg animate-pulse active:scale-95">Sí, Transmitir</button>
+                      </div>
+                  </div>
+              </div>
+          )}
+
+          {confirmJoinId && (
+              <div className="fixed inset-0 bg-black/80 z-[7000] flex items-center justify-center p-4">
+                  <div className="bg-white rounded-2xl p-6 text-center shadow-2xl max-w-xs w-full animate-in">
+                      <i className="fa-solid fa-users-viewfinder text-4xl text-[#1877F2] mb-3"></i>
+                      <h3 className="font-black text-lg text-gray-800 uppercase mb-2">Unirse al Vivo</h3>
+                      <p className="text-sm text-gray-600 mb-6">¿Desea ingresar a esta transmisión ministerial?</p>
+                      <div className="flex gap-3">
+                          <button onClick={()=>setConfirmJoinId(null)} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold uppercase text-xs active:scale-95">Cancelar</button>
+                          <button onClick={()=>{onJoinLive(confirmJoinId); setConfirmJoinId(null);}} className="flex-1 bg-[#1877F2] text-white py-3 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95">Sí, Entrar</button>
+                      </div>
+                  </div>
+              </div>
+          )}
+
           {lives.map(l => (
             <div key={l.id} className="bg-red-500 p-3 rounded-xl flex items-center justify-between text-white shadow-lg animate-pulse mx-2 sm:mx-0">
               <div className="flex items-center gap-3"><img src={l.photo || LOGO_URL} onError={(e)=>{e.target.src=LOGO_URL}} className="h-9 w-9 rounded-full border-2 border-white object-cover shadow-sm bg-white" /><p className="font-bold text-[11px] uppercase italic">● EN VIVO: {l.name}</p></div>
-              <button onClick={()=>onJoinLive(l.uid)} className="bg-white text-red-600 px-5 py-1.5 rounded-full font-black text-[10px] uppercase shadow-sm active:scale-95 transition-all leading-none">UNIRSE</button>
+              <button onClick={()=>setConfirmJoinId(l.uid)} className="bg-white text-red-600 px-5 py-1.5 rounded-full font-black text-[10px] uppercase shadow-sm active:scale-95 transition-all leading-none">UNIRSE</button>
             </div>
           ))}
 
           {sysMsg && <div className="bg-red-50 text-red-600 p-4 rounded-xl text-center text-[11px] font-black shadow-inner border border-red-100 mx-2 sm:mx-0">{sysMsg}</div>}
 
-          <div className="card-fb p-4 shadow-sm bg-white mx-2 sm:mx-0">
-              <div className="flex gap-3 mb-3">
+          <div className="card-fb p-3 shadow-sm bg-white mx-2 sm:mx-0">
+              <div className="flex gap-3 mb-2 px-1">
                 <img src={profile?.photo || LOGO_URL} onError={(e)=>{e.target.src=LOGO_URL}} className="h-10 w-10 rounded-full object-cover border border-gray-200 shadow-sm bg-gray-50 flex-shrink-0" />
-                <div onClick={()=> requireAuth(() => setIsPostDialogOpen(true))} className="w-full bg-gray-100 rounded-full p-2.5 px-5 text-gray-500 text-[14px] cursor-pointer hover:bg-gray-200 italic flex items-center shadow-inner leading-none truncate">¿Qué inspiración tiene hoy?</div>
+                <div onClick={()=> requireAuth(() => setIsPostDialogOpen(true))} className="w-full bg-gray-100 rounded-full p-2 px-4 text-gray-500 text-[13px] cursor-pointer hover:bg-gray-200 italic flex items-center shadow-inner leading-none truncate">¿Qué inspiración tiene hoy?</div>
               </div>
-              <div className="flex gap-1 border-t border-gray-100 pt-2">
-                <div onClick={() => requireAuth(onStartLive)} className="flex-1 flex items-center justify-center gap-2 p-2 rounded-lg cursor-pointer text-red-500 font-black hover:bg-gray-50 active:scale-95 transition-transform"><i className="fa-solid fa-circle-play text-xl"></i><span className="text-[11px]">VIVO</span></div>
-                <label className="flex-1 flex items-center justify-center gap-2 p-2 rounded-lg cursor-pointer text-green-600 font-black hover:bg-gray-50 active:scale-95 transition-transform" onClick={(e) => { if(!profile || !isUnlocked) { e.preventDefault(); requireAuth(()=>{}); } }}>
-                  <i className="fa-solid fa-camera text-xl"></i><span className="text-[11px]">FOTO</span>
+              <div className="flex gap-1 border-t border-gray-100 pt-1">
+                <div onClick={() => requireAuth(() => setConfirmLiveOpen(true))} className="flex-1 flex items-center justify-center gap-1 sm:gap-2 p-2 rounded-lg cursor-pointer text-red-500 font-black hover:bg-gray-50 active:scale-95 transition-transform"><i className="fa-solid fa-circle-play text-lg sm:text-xl"></i><span className="text-[9px] sm:text-[11px]">VIVO</span></div>
+                
+                <label className="flex-1 flex items-center justify-center gap-1 sm:gap-2 p-2 rounded-lg cursor-pointer text-green-600 font-black hover:bg-gray-50 active:scale-95 transition-transform" onClick={(e) => { if(!profile || !isUnlocked) { e.preventDefault(); requireAuth(()=>{}); } }}>
+                  <i className="fa-solid fa-camera text-lg sm:text-xl"></i><span className="text-[9px] sm:text-[11px]">FOTO</span>
                   <input type="file" className="hidden" accept="image/*" onChange={async e=>{ if(profile && isUnlocked) { setImg(await compressMedia(e.target.files[0])); setIsPostDialogOpen(true); } }} />
                 </label>
-                <div onClick={() => requireAuth(startVoice)} className="flex-1 flex items-center justify-center gap-2 p-2 rounded-lg cursor-pointer text-orange-500 font-black hover:bg-gray-50 active:scale-95 transition-transform"><i className="fa-solid fa-microphone-lines text-xl"></i><span className="text-[11px]">VOZ</span></div>
+                
+                <label className="flex-1 flex items-center justify-center gap-1 sm:gap-2 p-2 rounded-lg cursor-pointer text-purple-600 font-black hover:bg-gray-50 active:scale-95 transition-transform" onClick={(e) => { if(!profile || !isUnlocked) { e.preventDefault(); requireAuth(()=>{}); } }}>
+                  <i className="fa-solid fa-film text-lg sm:text-xl"></i><span className="text-[9px] sm:text-[11px]">VIDEO</span>
+                  <input type="file" className="hidden" accept="video/mp4,video/x-m4v,video/*" capture="camcorder" onChange={e=>{ 
+                      if(profile && isUnlocked) { 
+                          const f = e.target.files[0]; 
+                          if(!f) return;
+                          if(f.size > 40 * 1024 * 1024) { setSysMsg("⚠️ El video es muy pesado. Seleccione uno más corto (Máx 40MB)."); setTimeout(()=>setSysMsg(''), 5000); return; }
+                          setVideoFile(f); setVideoPreview(URL.createObjectURL(f)); setIsPostDialogOpen(true); 
+                      } 
+                  }} />
+                </label>
+
+                <div onClick={() => requireAuth(startVoice)} className="flex-1 flex items-center justify-center gap-1 sm:gap-2 p-2 rounded-lg cursor-pointer text-orange-500 font-black hover:bg-gray-50 active:scale-95 transition-transform"><i className="fa-solid fa-microphone-lines text-lg sm:text-xl"></i><span className="text-[9px] sm:text-[11px]">VOZ</span></div>
               </div>
           </div>
           
@@ -453,7 +520,16 @@
              )}
 
              <textarea value={txt} onChange={e=>setTxt(e.target.value)} placeholder={`Escriba su mensaje aquí...`} className="w-full h-24 outline-none text-[16px] resize-none placeholder-gray-400 p-3 rounded-xl bg-gray-50 border border-gray-100 shadow-inner text-gray-800" />
+             
              {img && <div className="mt-2 relative inline-block"><img src={img} className="h-32 object-cover rounded-lg shadow-md border-2 border-white" /><i onClick={()=>setImg('')} className="fa-solid fa-circle-xmark absolute -top-2 -right-2 text-gray-800 cursor-pointer bg-white rounded-full text-xl shadow-lg"></i></div>}
+             
+             {videoPreview && (
+                <div className="mt-2 relative inline-block w-full">
+                    <p className="text-[10px] text-purple-600 font-bold mb-1 uppercase tracking-widest"><i className="fa-solid fa-compress mr-1"></i> Video listo (Compresión nativa activada)</p>
+                    <video src={videoPreview} controls className="w-full max-h-48 rounded-lg shadow-md border border-gray-200 bg-black object-contain" />
+                    <i onClick={()=>{setVideoPreview(''); setVideoFile(null);}} className="fa-solid fa-circle-xmark absolute top-6 -right-2 text-red-500 cursor-pointer bg-white rounded-full text-xl shadow-lg hover:scale-110"></i>
+                </div>
+             )}
              
              {location && <div className="mt-2 text-xs font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-full inline-block">📍 Ubicación: {location} <i className="fa-solid fa-xmark ml-2 cursor-pointer text-red-500" onClick={()=>setLocation('')}></i></div>}
              {tag && <div className="mt-2 ml-2 text-xs font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-full inline-block">👤 Con: {tag} <i className="fa-solid fa-xmark ml-2 cursor-pointer text-red-500" onClick={()=>setTag('')}></i></div>}
@@ -474,8 +550,17 @@
                 <i onClick={()=>{const t = prompt("¿A quién desea etiquetar?"); if(t) setTag(t);}} className="fa-solid fa-user-tag text-green-600 text-xl cursor-pointer active:scale-90 bg-white p-2 rounded-lg shadow-sm" title="Etiquetar Hermano"></i>
              </div>
              
+             {/* BARRA DE PROGRESO VISUAL PARA VIDEOS */}
+             {loading && uploadProgress > 0 && uploadProgress < 100 && (
+                 <div className="w-full bg-gray-100 rounded-full h-3 mb-3 shadow-inner overflow-hidden border border-gray-200">
+                     <div className="bg-[#1877F2] h-3 rounded-full transition-all duration-300 relative overflow-hidden" style={{width: `${uploadProgress}%`}}>
+                         <div className="absolute inset-0 bg-white/20 animate-[pulse_1s_ease-in-out_infinite]"></div>
+                     </div>
+                 </div>
+             )}
+
              <button onClick={sendPost} disabled={loading || (audioState !== 'idle' && audioState !== 'recorded')} className="w-full bg-[#1877F2] text-white font-black py-4 rounded-xl shadow-md active:scale-95 text-[13px] uppercase tracking-widest transition-all disabled:opacity-50">
-                 {loading ? 'Subiendo...' : 'Compartir Bendición'}
+                 {loading ? loadingText : 'Compartir Bendición'}
              </button>
           </div>
           )}
@@ -492,17 +577,26 @@
               {(p.uid === user?.uid || isAdmin) && <button onClick={()=>{ postCol.doc(p.id).delete(); }} className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors z-10 p-2"><i className="fa-solid fa-trash-can"></i></button>}
               <div className="p-4 flex gap-3 pr-8 text-left"><img src={p.authorPhoto || LOGO_URL} onError={(e)=>{e.target.src=LOGO_URL}} className="h-10 w-10 rounded-full object-cover border border-gray-200 shadow-sm bg-gray-50 flex-shrink-0" /><div><p className="font-bold text-[13px] leading-none mb-1 text-[#1877F2] uppercase tracking-tighter">{p.authorName}</p><p className="text-[9px] text-gray-400 font-black uppercase tracking-widest leading-none">{new Date(p.at).toLocaleString()}</p></div></div>
               {p.text && <p className="px-5 pb-3 text-[15px] leading-relaxed text-gray-800 whitespace-pre-wrap">{p.text}</p>}
+              
               <MediaProjector url={p.img} />
+              
+              {p.video && (
+                  <div className="mt-2 bg-black flex justify-center shadow-inner border-y border-gray-200">
+                      <video src={p.video} controls preload="metadata" className="max-h-[400px] w-full object-contain" />
+                  </div>
+              )}
+
               {p.audio && <div className="px-4 py-3 bg-gray-50 border-y border-gray-100 shadow-inner"><audio src={p.audio} controls className="w-full h-10" /></div>}
-              <div className="reac-bar border-t border-gray-100 pt-1 flex px-2 gap-2 bg-gray-50/50 pb-1">
+              
+              <div className="reac-bar border-t border-gray-100 pt-1 flex px-1 gap-0 sm:gap-1 bg-gray-50/50 pb-1">
                 <button disabled={!profile || !isUnlocked} onClick={async()=>{
                     if(!postCol) return;
                     const rs = { ...(p.reactions || {}) };
                     if (rs[user?.uid] === 'amen') delete rs[user?.uid]; else rs[user?.uid] = 'amen';
                     await postCol.doc(p.id).update({ reactions: rs });
                 }} className={`reac-btn ${p.reactions?.[user?.uid]==='amen'?'active-amen':''}`}>
-                    <div className="relative flex items-center justify-center gap-2 px-2">
-                        <i className="fa-solid fa-hands-praying text-xl"></i> <span className="text-[12px] font-black uppercase">Amén</span>
+                    <div className="relative flex items-center justify-center gap-1 px-1">
+                        <i className="fa-solid fa-hands-praying text-lg"></i> <span className="text-[9px] sm:text-[11px] font-black uppercase">Amén</span>
                         {Object.values(p.reactions||{}).filter(r=>r==='amen').length > 0 && (
                             <span className="reac-badge">{Object.values(p.reactions||{}).filter(r=>r==='amen').length}</span>
                         )}
@@ -514,14 +608,52 @@
                     if (rs[user?.uid] === 'bendice') delete rs[user?.uid]; else rs[user?.uid] = 'bendice';
                     await postCol.doc(p.id).update({ reactions: rs });
                 }} className={`reac-btn ${p.reactions?.[user?.uid]==='bendice'?'active-bendice':''}`}>
-                    <div className="relative flex items-center justify-center gap-2 px-2">
-                        <i className="fa-solid fa-heart text-xl"></i> <span className="text-[12px] font-black uppercase">Bendice</span>
+                    <div className="relative flex items-center justify-center gap-1 px-1">
+                        <i className="fa-solid fa-heart text-lg"></i> <span className="text-[9px] sm:text-[11px] font-black uppercase">Bendice</span>
                         {Object.values(p.reactions||{}).filter(r=>r==='bendice').length > 0 && (
                             <span className="reac-badge">{Object.values(p.reactions||{}).filter(r=>r==='bendice').length}</span>
                         )}
                     </div>
                 </button>
+                <button onClick={() => setShowComments({...showComments, [p.id]: !showComments[p.id]})} className="reac-btn">
+                    <div className="relative flex items-center justify-center gap-1 px-1">
+                        <i className="fa-regular fa-comment text-lg"></i> <span className="text-[9px] sm:text-[11px] font-black uppercase">Comentar</span>
+                        {p.comments && p.comments.length > 0 && <span className="reac-badge !bg-gray-600 !border-gray-600">{p.comments.length}</span>}
+                    </div>
+                </button>
+                <button onClick={() => handleShare(p)} className="reac-btn">
+                    <div className="relative flex items-center justify-center gap-1 px-1 text-blue-600">
+                        <i className="fa-solid fa-share-nodes text-lg"></i> <span className="text-[9px] sm:text-[11px] font-black uppercase">Compartir</span>
+                    </div>
+                </button>
               </div>
+
+              {showComments[p.id] && (
+                  <div className="bg-gray-50/80 p-3 border-t border-gray-200 animate-in">
+                      <div className="space-y-3 mb-3 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                          {(!p.comments || p.comments.length === 0) && <p className="text-[10px] text-gray-400 text-center italic font-bold">Sé el primero en edificar con un comentario.</p>}
+                          {(p.comments || []).map((c, i) => (
+                              <div key={i} className="flex gap-2 text-left">
+                                  <img src={c.photo || LOGO_URL} onError={(e)=>{e.target.src=LOGO_URL}} className="w-7 h-7 rounded-full border border-gray-200 bg-white object-cover shrink-0" />
+                                  <div className="bg-white px-3 py-2 rounded-2xl rounded-tl-none border border-gray-200 shadow-sm text-[13px] flex-1">
+                                      <div className="flex justify-between items-end mb-0.5">
+                                          <span className="font-black text-[#1877F2] text-[10px] leading-none uppercase">{c.name}</span>
+                                      </div>
+                                      <span className="text-gray-700 leading-tight">{c.text}</span>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                      {(!profile || !isUnlocked) ? (
+                           <div className="text-center text-[10px] text-red-500 font-black p-2 bg-red-50 rounded-xl border border-red-100">Ingrese al perfil para comentar</div>
+                      ) : (
+                          <div className="flex gap-2">
+                              <input type="text" value={commentText[p.id] || ''} onChange={e => setCommentText({...commentText, [p.id]: e.target.value})} onKeyDown={e => e.key==='Enter'&&handleAddComment(p.id)} placeholder="Escribe un comentario..." className="flex-1 bg-white border border-gray-300 rounded-full px-4 py-2 text-[13px] outline-none shadow-inner focus:border-[#1877F2] transition-colors" />
+                              <button onClick={() => handleAddComment(p.id)} disabled={!(commentText[p.id]?.trim())} className="bg-[#1877F2] disabled:opacity-50 disabled:active:scale-100 text-white w-10 h-10 rounded-full flex items-center justify-center active:scale-90 shadow-md shrink-0 transition-transform"><i className="fa-solid fa-paper-plane text-sm"></i></button>
+                          </div>
+                      )}
+                  </div>
+              )}
             </div>
           ))}
         </div>
@@ -570,8 +702,6 @@
       );
     }
 
-    // --- FORMULARIOS BLINDADOS (SIEMPRE VISIBLES, PROTEGIDOS CON AVISO) ---
-
     function WisdomView({ user, profile, isUnlocked, isAdmin }) {
       const [items, setItems] = useState([]);
       const [showForm, setShowForm] = useState(false);
@@ -581,7 +711,7 @@
 
       useEffect(() => { 
           if(!db) return;
-          const unsub = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('wisdom').onSnapshot(s => setItems(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at)), err => console.log(err)); 
+          const unsub = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('wisdom').onSnapshot(s => setItems(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at).slice(0,30)), err => console.log(err)); 
           return ()=>unsub(); 
       }, []);
 
@@ -654,7 +784,7 @@
 
       useEffect(() => { 
           if(!db) return;
-          const unsub = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('devotionals').onSnapshot(s => setDevs(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at)), err => console.log(err)); return ()=>unsub(); 
+          const unsub = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('devotionals').onSnapshot(s => setDevs(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at).slice(0,30)), err => console.log(err)); return ()=>unsub(); 
       }, []);
 
       const handleToggle = () => {
