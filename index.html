@@ -6,6 +6,11 @@
   <meta name="theme-color" content="#ffffff">
   <title>Comunidad Davar - Red Ministerial</title>
   
+  <!-- Optimizaciones de Velocidad: Pre-conexión de Red -->
+  <link rel="preconnect" href="https://www.gstatic.com">
+  <link rel="preconnect" href="https://firestore.googleapis.com">
+  <link rel="preconnect" href="https://firebasestorage.googleapis.com">
+  
   <!-- Sello de Identidad Permanente -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%231877F2%22%20rx%3D%2240%22%2F%3E%3Ctext%20x%3D%22100%22%20y%3D%22115%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2285%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%22-4%22%3ECD%3C%2Ftext%3E%3Ctext%20x%3D%22100%22%20y%3D%22160%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2226%22%20fill%3D%22%23D4AF37%22%20text-anchor%3D%22middle%22%20text-transform%3D%22uppercase%22%20letter-spacing%3D%222%22%3EDios%3C%2Ftext%3E%3C%2Fsvg%3E">
   <link rel="apple-touch-icon" href="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20200%20200%22%3E%3Crect%20width%3D%22200%22%20height%3D%22200%22%20fill%3D%22%231877F2%22%20rx%3D%2240%22%2F%3E%3Ctext%20x%3D%22100%22%20y%3D%22115%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2285%22%20fill%3D%22white%22%20text-anchor%3D%22middle%22%20letter-spacing%3D%22-4%22%3ECD%3C%2Ftext%3E%3Ctext%20x%3D%22100%22%20y%3D%22160%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-weight%3D%22900%22%20font-size%3D%2226%22%20fill%3D%22%23D4AF37%22%20text-anchor%3D%22middle%22%20text-transform%3D%22uppercase%22%20letter-spacing%3D%222%22%3EDios%3C%2Ftext%3E%3C%2Fsvg%3E">
@@ -96,7 +101,12 @@
         auth = firebase.auth();
         db = firebase.firestore();
         storage = firebase.storage(); // ACTIVAMOS STORAGE
+        
+        // CORRECCIÓN: La configuración DEBE ir antes de habilitar la persistencia
         db.settings({ experimentalForceLongPolling: true });
+        
+        // ACELERADOR OFFLINE: Activar caché persistente para internet pobre
+        db.enablePersistence().catch((err) => console.warn("Caché no disponible:", err));
     }
     
     const appId = "comunidad-davar-v2026-arca-final"; 
@@ -152,7 +162,7 @@
       return <a href={url} target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-xl border border-blue-100 block text-blue-600 font-bold truncate text-[11px] mb-2"><i className="fa-solid fa-link mr-2"></i> Abrir contenido externo</a>;
     };
 
-    // --- SESIÓN EN VIVO OPTIMIZADA ---
+    // --- SESIÓN EN VIVO OPTIMIZADA CON SALA PREVIA PARA CÁMARA ---
     const LiveSession = ({ profile, broadcasterId, isBroadcaster, onClose }) => {
       const roomName = `DavarMinisterio_${broadcasterId}`;
       const [chatMsgs, setChatMsgs] = useState([]);
@@ -213,13 +223,14 @@
           setNewMsg('');
       };
 
-      const jitsiParams = 'config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.prejoinPageEnabled=false&config.disableDeepLinking=true&config.resolution=360&config.videoQuality.maxBitratesVideo=400&config.startBitrate=300&config.disableAudioLevels=true&config.disableSimulcast=true&config.channelLastN=4&interfaceConfig.TOOLBAR_BUTTONS=%5B%22microphone%22%2C%22camera%22%2C%22toggle-camera%22%5D&interfaceConfig.SHOW_JITSI_WATERMARK=false';
+      // MEJORA CÁMARA: Se eliminó "prejoinPageEnabled=false". Ahora Jitsi muestra su sala previa para autorizar y seleccionar cámara nativamente.
+      const jitsiParams = `config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.disableDeepLinking=true&userInfo.displayName=${encodeURIComponent(profile?.name || 'Visitante')}`;
       const jitsiUrl = `https://meet.jit.si/${roomName}#${jitsiParams}`;
 
       return (
         <div className="live-overlay animate-in z-[6000]">
           <div className="flex-1 bg-black relative flex flex-col items-center justify-center overflow-hidden">
-            <iframe ref={iframeRef} src={jitsiUrl} className="absolute inset-0 w-full h-full border-none z-10" allow="camera; microphone; fullscreen; display-capture; autoplay" />
+            <iframe ref={iframeRef} src={jitsiUrl} className="absolute inset-0 w-full h-full border-none z-10" allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-read; clipboard-write" />
 
             <div className="absolute top-10 left-6 flex items-center gap-3 bg-black/80 p-2 pr-5 rounded-full backdrop-blur-md border border-white/20 shadow-lg z-20 pointer-events-none">
                <img src={profile?.photo || LOGO_URL} className="h-10 w-10 rounded-full border-2 border-[#1877F2] object-cover bg-white" onError={(e)=>{e.target.src=LOGO_URL}} />
@@ -371,7 +382,6 @@
         if (tag) finalTxt += `\n👤 Con: ${tag}`;
         if (linkUrl) finalTxt += `\n🔗 ${linkUrl}`;
 
-        // LÓGICA DE SUBIDA DE VIDEO LIGERO Y CON BARRA DE PROGRESO
         let uploadedVideoUrl = '';
         if (videoFile && storage) {
             try {
@@ -379,7 +389,6 @@
                 const videoRef = storage.ref(`davar_videos/${Date.now()}_${user.uid}`);
                 const uploadTask = videoRef.put(videoFile);
                 
-                // PROMESA PARA ESPERAR LA SUBIDA Y MOSTRAR PROGRESO EN TIEMPO REAL
                 uploadedVideoUrl = await new Promise((resolve, reject) => {
                     uploadTask.on('state_changed', 
                         (snapshot) => {
@@ -387,9 +396,7 @@
                             setUploadProgress(progress);
                             setLoadingText(`Subiendo video... ${progress}%`);
                         },
-                        (error) => {
-                            reject(error);
-                        },
+                        (error) => { reject(error); },
                         async () => {
                             const url = await uploadTask.snapshot.ref.getDownloadURL();
                             resolve(url);
@@ -467,9 +474,10 @@
                   <input type="file" className="hidden" accept="image/*" onChange={async e=>{ if(profile && isUnlocked) { setImg(await compressMedia(e.target.files[0])); setIsPostDialogOpen(true); } }} />
                 </label>
                 
+                {/* MEJORA: accept específico para forzar la apertura de la galería de archivos en lugar de la cámara */}
                 <label className="flex-1 flex items-center justify-center gap-1 sm:gap-2 p-2 rounded-lg cursor-pointer text-purple-600 font-black hover:bg-gray-50 active:scale-95 transition-transform" onClick={(e) => { if(!profile || !isUnlocked) { e.preventDefault(); requireAuth(()=>{}); } }}>
                   <i className="fa-solid fa-film text-lg sm:text-xl"></i><span className="text-[9px] sm:text-[11px]">VIDEO</span>
-                  <input type="file" className="hidden" accept="video/mp4,video/x-m4v,video/*" capture="camcorder" onChange={e=>{ 
+                  <input type="file" className="hidden" accept=".mp4,.mov,.avi,.mkv,.webm,.m4v" onChange={e=>{ 
                       if(profile && isUnlocked) { 
                           const f = e.target.files[0]; 
                           if(!f) return;
@@ -550,7 +558,6 @@
                 <i onClick={()=>{const t = prompt("¿A quién desea etiquetar?"); if(t) setTag(t);}} className="fa-solid fa-user-tag text-green-600 text-xl cursor-pointer active:scale-90 bg-white p-2 rounded-lg shadow-sm" title="Etiquetar Hermano"></i>
              </div>
              
-             {/* BARRA DE PROGRESO VISUAL PARA VIDEOS */}
              {loading && uploadProgress > 0 && uploadProgress < 100 && (
                  <div className="w-full bg-gray-100 rounded-full h-3 mb-3 shadow-inner overflow-hidden border border-gray-200">
                      <div className="bg-[#1877F2] h-3 rounded-full transition-all duration-300 relative overflow-hidden" style={{width: `${uploadProgress}%`}}>
@@ -581,12 +588,12 @@
               <MediaProjector url={p.img} />
               
               {p.video && (
-                  <div className="mt-2 bg-black flex justify-center shadow-inner border-y border-gray-200">
-                      <video src={p.video} controls preload="metadata" className="max-h-[400px] w-full object-contain" />
+                  <div className="mt-2 bg-black flex justify-center shadow-inner border-y border-gray-200 relative">
+                      <video src={p.video} controls preload="none" className="max-h-[400px] w-full object-contain" poster="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%25%22%20height%3D%22100%25%22%20viewBox%3D%220%200%20800%20400%22%3E%3Crect%20width%3D%22800%22%20height%3D%22400%22%20fill%3D%22%23111%22%2F%3E%3Ccircle%20cx%3D%22400%22%20cy%3D%22200%22%20r%3D%2240%22%20fill%3D%22%231877F2%22%20opacity%3D%220.9%22%2F%3E%3Cpolygon%20points%3D%22385%2C175%20385%2C225%20425%2C200%22%20fill%3D%22%23fff%22%2F%3E%3Ctext%20x%3D%22400%22%20y%3D%22270%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20fill%3D%22%23aaa%22%20text-anchor%3D%22middle%22%3ETocar%20para%20cargar%20video%3C%2Ftext%3E%3C%2Fsvg%3E" />
                   </div>
               )}
 
-              {p.audio && <div className="px-4 py-3 bg-gray-50 border-y border-gray-100 shadow-inner"><audio src={p.audio} controls className="w-full h-10" /></div>}
+              {p.audio && <div className="px-4 py-3 bg-gray-50 border-y border-gray-100 shadow-inner"><audio src={p.audio} controls preload="none" className="w-full h-10" /></div>}
               
               <div className="reac-bar border-t border-gray-100 pt-1 flex px-1 gap-0 sm:gap-1 bg-gray-50/50 pb-1">
                 <button disabled={!profile || !isUnlocked} onClick={async()=>{
@@ -1003,22 +1010,66 @@
       );
     }
 
+    // --- MEJORA: PERFIL ESTILO MURO PARA REVISAR Y EDITAR PUBLICACIONES ---
     function ProfilePosts({ user }) {
       const [myPosts, setMyPosts] = useState([]);
+      const [editingId, setEditingId] = useState(null);
+      const [editTxt, setEditTxt] = useState('');
+
       useEffect(() => { 
           if (!user || !db) return; 
           const colP = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts');
           const unsub = colP.onSnapshot(s => setMyPosts(s.docs.map(d=>({id:d.id, ...d.data()})).filter(x=> user && x.uid === user.uid).sort((a,b)=>b.at-a.at)), err => console.log(err)); 
           return () => unsub(); 
       }, [user?.uid]);
+
+      const handleSave = async (id) => {
+          await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts').doc(id).update({ text: editTxt });
+          setEditingId(null);
+      };
+
       return (
-        <div className="max-w-[620px] mx-auto space-y-4 mt-6 px-2 md:px-0">
+        <div className="max-w-[620px] mx-auto space-y-4 mt-6 px-2 md:px-0 text-left">
           <h3 className="font-black text-xs uppercase tracking-widest text-gray-400 text-center italic mb-3">Mi Historial Ministerial</h3>
-          {myPosts.length === 0 && <p className="text-[10px] text-gray-400 uppercase font-bold opacity-50">Aún no has compartido nada en el muro.</p>}
+          
+          {myPosts.length === 0 && <p className="text-[10px] text-gray-400 uppercase font-bold opacity-50 text-center">Aún no has compartido nada en el muro.</p>}
+          
           {myPosts.map(p => (
-            <div key={p.id} className="card-fb bg-white p-4 shadow-sm border border-gray-200 flex justify-between items-start animate-up text-left">
-               <div className="flex-1 text-left pr-3"><p className="text-[9px] text-[#1877F2] font-black mb-1 uppercase leading-none">{new Date(p.at).toLocaleString()}</p>{p.text && <p className="text-[13px] line-clamp-2 italic text-gray-700">"{p.text}"</p>}</div>
-               <button onClick={async ()=>{ const colP = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts'); await colP.doc(p.id).delete(); }} className="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center shadow-sm flex-shrink-0 active:scale-90 transition-transform"><i className="fa-solid fa-trash-can text-sm"></i></button>
+            <div key={p.id} className="card-fb animate-up border border-gray-200 shadow-sm bg-white relative">
+              <div className="absolute top-3 right-3 flex gap-2 z-10">
+                  <button onClick={()=>{ setEditingId(p.id); setEditTxt(p.text || ''); }} className="text-gray-400 hover:text-[#1877F2] transition-colors p-2 bg-gray-50 rounded-full shadow-sm" title="Editar"><i className="fa-solid fa-pen text-xs"></i></button>
+                  <button onClick={async ()=>{ await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts').doc(p.id).delete(); }} className="text-gray-400 hover:text-red-500 transition-colors p-2 bg-gray-50 rounded-full shadow-sm" title="Borrar"><i className="fa-solid fa-trash-can text-xs"></i></button>
+              </div>
+              
+              <div className="p-4 flex gap-3 pr-20 text-left">
+                  <img src={p.authorPhoto || LOGO_URL} onError={(e)=>{e.target.src=LOGO_URL}} className="h-10 w-10 rounded-full object-cover border border-gray-200 shadow-sm bg-gray-50 flex-shrink-0" />
+                  <div>
+                      <p className="font-bold text-[13px] leading-none mb-1 text-[#1877F2] uppercase tracking-tighter">{p.authorName}</p>
+                      <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest leading-none">{new Date(p.at).toLocaleString()}</p>
+                  </div>
+              </div>
+              
+              {editingId === p.id ? (
+                  <div className="px-4 pb-4">
+                      <textarea value={editTxt} onChange={e=>setEditTxt(e.target.value)} className="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl outline-none text-[15px] text-gray-800 resize-none h-24 mb-2" />
+                      <div className="flex justify-end gap-2">
+                          <button onClick={()=>setEditingId(null)} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-bold text-xs">Cancelar</button>
+                          <button onClick={()=>handleSave(p.id)} className="px-4 py-2 bg-[#1877F2] text-white rounded-lg font-bold text-xs shadow-md">Guardar</button>
+                      </div>
+                  </div>
+              ) : (
+                  p.text && <p className="px-5 pb-3 text-[15px] leading-relaxed text-gray-800 whitespace-pre-wrap">{p.text}</p>
+              )}
+              
+              <MediaProjector url={p.img} />
+              
+              {p.video && (
+                  <div className="mt-2 bg-black flex justify-center shadow-inner border-y border-gray-200 relative">
+                      <video src={p.video} controls preload="none" className="max-h-[400px] w-full object-contain" poster="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%25%22%20height%3D%22100%25%22%20viewBox%3D%220%200%20800%20400%22%3E%3Crect%20width%3D%22800%22%20height%3D%22400%22%20fill%3D%22%23111%22%2F%3E%3Ccircle%20cx%3D%22400%22%20cy%3D%22200%22%20r%3D%2240%22%20fill%3D%22%231877F2%22%20opacity%3D%220.9%22%2F%3E%3Cpolygon%20points%3D%22385%2C175%20385%2C225%20425%2C200%22%20fill%3D%22%23fff%22%2F%3E%3Ctext%20x%3D%22400%22%20y%3D%22270%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20fill%3D%22%23aaa%22%20text-anchor%3D%22middle%22%3ETocar%20para%20cargar%20video%3C%2Ftext%3E%3C%2Fsvg%3E" />
+                  </div>
+              )}
+
+              {p.audio && <div className="px-4 py-3 bg-gray-50 border-y border-gray-100 shadow-inner"><audio src={p.audio} controls preload="none" className="w-full h-10" /></div>}
             </div>
           ))}
         </div>
@@ -1039,6 +1090,22 @@
       
       const [deferredPrompt, setDeferredPrompt] = useState(null);
       const [showInstallModal, setShowInstallModal] = useState(false);
+
+      // MEJORA: Función para subir automáticamente al inicio de la página
+      const handleHomeClick = () => {
+          if (tab === 'feed') {
+              // Si ya estamos en el muro, subimos suavemente
+              const scroller = document.getElementById('main-scroller');
+              if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' });
+          } else {
+              // Si estamos en otra pestaña, cambiamos al muro y luego subimos
+              setTab('feed');
+              setTimeout(() => {
+                  const scroller = document.getElementById('main-scroller');
+                  if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' });
+              }, 50);
+          }
+      };
 
       if (typeof isInvalidKey !== 'undefined' && isInvalidKey) {
           return (
@@ -1171,7 +1238,7 @@
           {(!profile || !isUnlocked) && <GuestBanner />}
           
           <header className="header-fb sticky top-0 z-40">
-            <div onClick={()=>setTab('feed')} className="flex items-center gap-2 cursor-pointer transition-transform flex-shrink-0">
+            <div onClick={handleHomeClick} className="flex items-center gap-2 cursor-pointer transition-transform flex-shrink-0">
                <img onClick={(e) => { e.stopPropagation(); setShowAdminModal(true); }} src={LOGO_URL} className="w-9 h-9 rounded-full shadow-md cursor-pointer active:scale-90 border border-gray-200" />
                <span className="font-black text-[#1877F2] uppercase tracking-tighter italic text-[16px] ml-1 leading-none drop-shadow-sm">Comunidad Davar {isAdmin && <span className="text-red-500 text-[8px] block">(Admin)</span>}</span>
             </div>
@@ -1285,7 +1352,10 @@
                               </button>
                             </div>
                           </div>
+                          
+                          {/* MEJORA: El perfil ahora muestra el historial completo estilo Muro para revisar y editar */}
                           <ProfilePosts user={user} />
+                          
                         </div>
                     )
                 )}
@@ -1293,7 +1363,7 @@
           </main>
 
           <nav className="nav-bottom">
-             <button onClick={()=>setTab('feed')} className={`nav-btn ${tab==='feed'?'active':''}`}><i className="fa-solid fa-house"></i><span>Inicio</span></button>
+             <button onClick={handleHomeClick} className={`nav-btn ${tab==='feed'?'active':''}`}><i className="fa-solid fa-house"></i><span>Inicio</span></button>
              <button onClick={()=>setTab('chat')} className={`nav-btn ${tab==='chat'?'active':''}`}><i className="fa-solid fa-comments"></i><span>Chat</span></button>
              <button onClick={()=>setTab('wisdom')} className={`nav-btn ${tab==='wisdom'?'active':''}`}><i className="fa-solid fa-sparkles"></i><span>Sabiduría</span></button>
              <button onClick={()=>setTab('groups')} className={`nav-btn ${tab==='groups'?'active':''}`}><i className="fa-solid fa-users-rectangle"></i><span>Grupos</span></button>
