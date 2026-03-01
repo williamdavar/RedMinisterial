@@ -162,7 +162,7 @@
       return <a href={url} target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-xl border border-blue-100 block text-blue-600 font-bold truncate text-[11px] mb-2"><i className="fa-solid fa-link mr-2"></i> Abrir contenido externo</a>;
     };
 
-    // --- SESIÓN EN VIVO OPTIMIZADA CON SALA PREVIA PARA CÁMARA ---
+    // --- SESIÓN EN VIVO OPTIMIZADA (PATRÓN FACEBOOK LIVE) ---
     const LiveSession = ({ profile, broadcasterId, isBroadcaster, onClose }) => {
       const roomName = `DavarMinisterio_${broadcasterId}`;
       const [chatMsgs, setChatMsgs] = useState([]);
@@ -223,8 +223,11 @@
           setNewMsg('');
       };
 
-      // MEJORA CÁMARA: Se eliminó "prejoinPageEnabled=false". Ahora Jitsi muestra su sala previa para autorizar y seleccionar cámara nativamente.
-      const jitsiParams = `config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.disableDeepLinking=true&userInfo.displayName=${encodeURIComponent(profile?.name || 'Visitante')}`;
+      // MEJORA: Algoritmo Facebook Live. Si es emisor (broadcaster) entra con cámara y micrófono. Si es espectador, entra bloqueado.
+      const jitsiParams = isBroadcaster
+          ? `config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.prejoinPageEnabled=false&config.disableDeepLinking=true&userInfo.displayName=${encodeURIComponent(profile?.name || 'Emisor')}`
+          : `config.startWithAudioMuted=true&config.startWithVideoMuted=true&config.prejoinPageEnabled=false&config.disableDeepLinking=true&userInfo.displayName=${encodeURIComponent(profile?.name || 'Espectador')}`;
+      
       const jitsiUrl = `https://meet.jit.si/${roomName}#${jitsiParams}`;
 
       return (
@@ -296,6 +299,10 @@
       
       const [confirmLiveOpen, setConfirmLiveOpen] = useState(false);
       const [confirmJoinId, setConfirmJoinId] = useState(null);
+      
+      // ESTADOS PARA SALA DE PREPARACIÓN NATIVA DE CÁMARA
+      const [prepStream, setPrepStream] = useState(null);
+      const prepVideoRef = useRef(null);
 
       const [commentText, setCommentText] = useState({});
       const [showComments, setShowComments] = useState({});
@@ -312,6 +319,13 @@
         return () => { u1(); u2(); };
       }, [user]);
 
+      // Efecto para acoplar la cámara en la sala de preparación
+      useEffect(() => {
+          if (confirmLiveOpen && prepStream && prepVideoRef.current) {
+              prepVideoRef.current.srcObject = prepStream;
+          }
+      }, [confirmLiveOpen, prepStream]);
+
       const requireAuth = (action) => {
           if (!profile || !isUnlocked) {
               setSysMsg("⚠️ Acción bloqueada: Ingrese en la pestaña 'PERFIL' con su clave para participar.");
@@ -319,6 +333,40 @@
           } else {
               action();
           }
+      };
+
+      // MEJORA: Abrir cámara local primero antes de ir en vivo (Sala de Preparación)
+      const handleOpenLivePrep = async () => {
+          setConfirmLiveOpen(true);
+          try {
+              const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+              setPrepStream(stream);
+          } catch (err) {
+              setSysMsg("⚠️ Autorice la cámara y el micrófono de su celular para poder transmitir.");
+              setTimeout(() => setSysMsg(''), 5000);
+          }
+      };
+
+      const cancelLivePrep = () => {
+          if (prepStream) {
+              prepStream.getTracks().forEach(t => t.stop());
+          }
+          setPrepStream(null);
+          setConfirmLiveOpen(false);
+      };
+
+      const confirmAndGoLive = () => {
+          // Apagamos la cámara de preparación para cedérsela al iframe oficial de transmisión
+          if (prepStream) {
+              prepStream.getTracks().forEach(t => t.stop());
+          }
+          setPrepStream(null);
+          setConfirmLiveOpen(false);
+          
+          // Damos 300ms de respiro al celular y lanzamos el vivo
+          setTimeout(() => {
+              onStartLive();
+          }, 300);
       };
 
       const startVoice = async () => {
@@ -424,29 +472,40 @@
       return (
         <div className="space-y-4 pb-24 animate-up text-left w-full max-w-[620px] mx-auto mt-2">
           
+          {/* MEJORA: SALA DE PREPARACIÓN DE TRANSMISIÓN */}
           {confirmLiveOpen && (
-              <div className="fixed inset-0 bg-black/80 z-[7000] flex items-center justify-center p-4">
-                  <div className="bg-white rounded-2xl p-6 text-center shadow-2xl max-w-xs w-full animate-in">
-                      <i className="fa-solid fa-video text-4xl text-red-500 mb-3 animate-pulse"></i>
-                      <h3 className="font-black text-lg text-gray-800 uppercase mb-2">Transmisión Ministerial</h3>
-                      <p className="text-sm text-gray-600 mb-6">¿Desea encender su cámara y transmitir en vivo ahora mismo?</p>
-                      <div className="flex gap-3">
-                          <button onClick={()=>setConfirmLiveOpen(false)} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold uppercase text-xs active:scale-95">Cancelar</button>
-                          <button onClick={()=>{setConfirmLiveOpen(false); onStartLive();}} className="flex-1 bg-red-600 text-white py-3 rounded-xl font-black uppercase text-xs shadow-lg animate-pulse active:scale-95">Sí, Transmitir</button>
-                      </div>
+              <div className="fixed inset-0 bg-black z-[7000] flex flex-col items-center justify-center p-4 animate-in">
+                  <h3 className="font-black text-xl text-white uppercase mb-2 animate-pulse"><span className="text-red-500">●</span> Preparando Transmisión</h3>
+                  <p className="text-[11px] text-gray-300 mb-4 text-center max-w-sm px-4">Ajuste su encuadre. Al terminar la transmisión, el video será eliminado automáticamente sin dejar registro en el Arca.</p>
+                  
+                  <div className="w-full max-w-sm bg-gray-900 rounded-2xl overflow-hidden shadow-2xl border border-gray-700 mb-6 relative aspect-[3/4] flex items-center justify-center">
+                      {prepStream ? (
+                          <video ref={prepVideoRef} autoPlay playsInline muted className="w-full h-full object-cover transform -scale-x-100" />
+                      ) : (
+                          <div className="text-gray-500 flex flex-col items-center">
+                             <i className="fa-solid fa-camera animate-pulse text-3xl mb-2"></i>
+                             <p className="text-xs font-bold uppercase tracking-widest">Activando cámara...</p>
+                          </div>
+                      )}
+                  </div>
+                  
+                  <div className="flex gap-4 w-full max-w-sm px-4">
+                      <button onClick={cancelLivePrep} className="flex-1 bg-gray-800 text-gray-300 py-4 rounded-xl font-bold uppercase text-[11px] active:scale-95 border border-gray-700">Cancelar</button>
+                      <button onClick={confirmAndGoLive} disabled={!prepStream} className="flex-1 bg-[#1877F2] text-white py-4 rounded-xl font-black uppercase text-[11px] shadow-lg active:scale-95 disabled:opacity-50">Transmitir Ahora</button>
                   </div>
               </div>
           )}
 
+          {/* MEJORA: SALA DE INGRESO COMO ESPECTADOR */}
           {confirmJoinId && (
               <div className="fixed inset-0 bg-black/80 z-[7000] flex items-center justify-center p-4">
-                  <div className="bg-white rounded-2xl p-6 text-center shadow-2xl max-w-xs w-full animate-in">
+                  <div className="bg-white rounded-3xl p-6 text-center shadow-2xl max-w-xs w-full animate-in border-t-4 border-[#1877F2]">
                       <i className="fa-solid fa-users-viewfinder text-4xl text-[#1877F2] mb-3"></i>
-                      <h3 className="font-black text-lg text-gray-800 uppercase mb-2">Unirse al Vivo</h3>
-                      <p className="text-sm text-gray-600 mb-6">¿Desea ingresar a esta transmisión ministerial?</p>
+                      <h3 className="font-black text-lg text-gray-800 uppercase mb-2 leading-tight">Unirse a la Transmisión</h3>
+                      <p className="text-[12px] text-gray-600 mb-6">Ingresará como espectador. Su cámara y micrófono permanecerán apagados para no interrumpir la bendición.</p>
                       <div className="flex gap-3">
-                          <button onClick={()=>setConfirmJoinId(null)} className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold uppercase text-xs active:scale-95">Cancelar</button>
-                          <button onClick={()=>{onJoinLive(confirmJoinId); setConfirmJoinId(null);}} className="flex-1 bg-[#1877F2] text-white py-3 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95">Sí, Entrar</button>
+                          <button onClick={()=>setConfirmJoinId(null)} className="flex-1 bg-gray-100 text-gray-700 py-3.5 rounded-xl font-bold uppercase text-[11px] active:scale-95">Cancelar</button>
+                          <button onClick={()=>{onJoinLive(confirmJoinId); setConfirmJoinId(null);}} className="flex-1 bg-[#1877F2] text-white py-3.5 rounded-xl font-black uppercase text-[11px] shadow-lg active:scale-95">Sí, Entrar</button>
                       </div>
                   </div>
               </div>
@@ -467,22 +526,51 @@
                 <div onClick={()=> requireAuth(() => setIsPostDialogOpen(true))} className="w-full bg-gray-100 rounded-full p-2 px-4 text-gray-500 text-[13px] cursor-pointer hover:bg-gray-200 italic flex items-center shadow-inner leading-none truncate">¿Qué inspiración tiene hoy?</div>
               </div>
               <div className="flex gap-1 border-t border-gray-100 pt-1">
-                <div onClick={() => requireAuth(() => setConfirmLiveOpen(true))} className="flex-1 flex items-center justify-center gap-1 sm:gap-2 p-2 rounded-lg cursor-pointer text-red-500 font-black hover:bg-gray-50 active:scale-95 transition-transform"><i className="fa-solid fa-circle-play text-lg sm:text-xl"></i><span className="text-[9px] sm:text-[11px]">VIVO</span></div>
+                <div onClick={() => requireAuth(() => handleOpenLivePrep())} className="flex-1 flex items-center justify-center gap-1 sm:gap-2 p-2 rounded-lg cursor-pointer text-red-500 font-black hover:bg-gray-50 active:scale-95 transition-transform"><i className="fa-solid fa-circle-play text-lg sm:text-xl"></i><span className="text-[9px] sm:text-[11px]">VIVO</span></div>
                 
                 <label className="flex-1 flex items-center justify-center gap-1 sm:gap-2 p-2 rounded-lg cursor-pointer text-green-600 font-black hover:bg-gray-50 active:scale-95 transition-transform" onClick={(e) => { if(!profile || !isUnlocked) { e.preventDefault(); requireAuth(()=>{}); } }}>
                   <i className="fa-solid fa-camera text-lg sm:text-xl"></i><span className="text-[9px] sm:text-[11px]">FOTO</span>
                   <input type="file" className="hidden" accept="image/*" onChange={async e=>{ if(profile && isUnlocked) { setImg(await compressMedia(e.target.files[0])); setIsPostDialogOpen(true); } }} />
                 </label>
                 
-                {/* MEJORA: accept específico para forzar la apertura de la galería de archivos en lugar de la cámara */}
+                {/* MEJORA: Filtro Inteligente de 1 Minuto y Límite estricto de peso (15MB) */}
                 <label className="flex-1 flex items-center justify-center gap-1 sm:gap-2 p-2 rounded-lg cursor-pointer text-purple-600 font-black hover:bg-gray-50 active:scale-95 transition-transform" onClick={(e) => { if(!profile || !isUnlocked) { e.preventDefault(); requireAuth(()=>{}); } }}>
                   <i className="fa-solid fa-film text-lg sm:text-xl"></i><span className="text-[9px] sm:text-[11px]">VIDEO</span>
                   <input type="file" className="hidden" accept=".mp4,.mov,.avi,.mkv,.webm,.m4v" onChange={e=>{ 
                       if(profile && isUnlocked) { 
                           const f = e.target.files[0]; 
                           if(!f) return;
-                          if(f.size > 40 * 1024 * 1024) { setSysMsg("⚠️ El video es muy pesado. Seleccione uno más corto (Máx 40MB)."); setTimeout(()=>setSysMsg(''), 5000); return; }
-                          setVideoFile(f); setVideoPreview(URL.createObjectURL(f)); setIsPostDialogOpen(true); 
+                          
+                          // Filtro de peso: Máximo 15MB para asegurar carga veloz
+                          if(f.size > 15 * 1024 * 1024) { 
+                              setSysMsg("⚠️ El video pesa mucho. Intente con uno más corto o menos pesado (Máx 15MB)."); 
+                              setTimeout(()=>setSysMsg(''), 6000); 
+                              return; 
+                          }
+
+                          // Filtro de duración: Máximo 1 minuto (60 seg + 5s de gracia)
+                          const videoURL = URL.createObjectURL(f);
+                          const tempVid = document.createElement('video');
+                          tempVid.preload = 'metadata';
+                          
+                          tempVid.onloadedmetadata = () => {
+                              URL.revokeObjectURL(videoURL);
+                              if (tempVid.duration > 65) { 
+                                  setSysMsg("⚠️ El video dura más de 1 minuto. Seleccione mensajes cortos y al punto.");
+                                  setTimeout(()=>setSysMsg(''), 6000);
+                                  return;
+                              }
+                              // Si pasa los filtros, se prepara para subir
+                              setVideoFile(f); setVideoPreview(URL.createObjectURL(f)); setIsPostDialogOpen(true); 
+                          };
+                          
+                          // Por si falla la lectura de duración en algún dispositivo antiguo, aplicamos solo el de peso
+                          tempVid.onerror = () => {
+                              URL.revokeObjectURL(videoURL);
+                              setVideoFile(f); setVideoPreview(URL.createObjectURL(f)); setIsPostDialogOpen(true);
+                          };
+                          
+                          tempVid.src = videoURL;
                       } 
                   }} />
                 </label>
@@ -587,9 +675,10 @@
               
               <MediaProjector url={p.img} />
               
+              {/* MEJORA REPRODUCTOR: playsInline para evitar que se abra en pantalla completa a la fuerza en iPhone */}
               {p.video && (
                   <div className="mt-2 bg-black flex justify-center shadow-inner border-y border-gray-200 relative">
-                      <video src={p.video} controls preload="none" className="max-h-[400px] w-full object-contain" poster="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%25%22%20height%3D%22100%25%22%20viewBox%3D%220%200%20800%20400%22%3E%3Crect%20width%3D%22800%22%20height%3D%22400%22%20fill%3D%22%23111%22%2F%3E%3Ccircle%20cx%3D%22400%22%20cy%3D%22200%22%20r%3D%2240%22%20fill%3D%22%231877F2%22%20opacity%3D%220.9%22%2F%3E%3Cpolygon%20points%3D%22385%2C175%20385%2C225%20425%2C200%22%20fill%3D%22%23fff%22%2F%3E%3Ctext%20x%3D%22400%22%20y%3D%22270%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20fill%3D%22%23aaa%22%20text-anchor%3D%22middle%22%3ETocar%20para%20cargar%20video%3C%2Ftext%3E%3C%2Fsvg%3E" />
+                      <video src={p.video} controls playsInline preload="none" className="max-h-[400px] w-full object-contain" poster="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%25%22%20height%3D%22100%25%22%20viewBox%3D%220%200%20800%20400%22%3E%3Crect%20width%3D%22800%22%20height%3D%22400%22%20fill%3D%22%23111%22%2F%3E%3Ccircle%20cx%3D%22400%22%20cy%3D%22200%22%20r%3D%2240%22%20fill%3D%22%231877F2%22%20opacity%3D%220.9%22%2F%3E%3Cpolygon%20points%3D%22385%2C175%20385%2C225%20425%2C200%22%20fill%3D%22%23fff%22%2F%3E%3Ctext%20x%3D%22400%22%20y%3D%22270%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20fill%3D%22%23aaa%22%20text-anchor%3D%22middle%22%3ETocar%20para%20cargar%20video%3C%2Ftext%3E%3C%2Fsvg%3E" />
                   </div>
               )}
 
@@ -1065,7 +1154,7 @@
               
               {p.video && (
                   <div className="mt-2 bg-black flex justify-center shadow-inner border-y border-gray-200 relative">
-                      <video src={p.video} controls preload="none" className="max-h-[400px] w-full object-contain" poster="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%25%22%20height%3D%22100%25%22%20viewBox%3D%220%200%20800%20400%22%3E%3Crect%20width%3D%22800%22%20height%3D%22400%22%20fill%3D%22%23111%22%2F%3E%3Ccircle%20cx%3D%22400%22%20cy%3D%22200%22%20r%3D%2240%22%20fill%3D%22%231877F2%22%20opacity%3D%220.9%22%2F%3E%3Cpolygon%20points%3D%22385%2C175%20385%2C225%20425%2C200%22%20fill%3D%22%23fff%22%2F%3E%3Ctext%20x%3D%22400%22%20y%3D%22270%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20fill%3D%22%23aaa%22%20text-anchor%3D%22middle%22%3ETocar%20para%20cargar%20video%3C%2Ftext%3E%3C%2Fsvg%3E" />
+                      <video src={p.video} controls playsInline preload="none" className="max-h-[400px] w-full object-contain" poster="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%25%22%20height%3D%22100%25%22%20viewBox%3D%220%200%20800%20400%22%3E%3Crect%20width%3D%22800%22%20height%3D%22400%22%20fill%3D%22%23111%22%2F%3E%3Ccircle%20cx%3D%22400%22%20cy%3D%22200%22%20r%3D%2240%22%20fill%3D%22%231877F2%22%20opacity%3D%220.9%22%2F%3E%3Cpolygon%20points%3D%22385%2C175%20385%2C225%20425%2C200%22%20fill%3D%22%23fff%22%2F%3E%3Ctext%20x%3D%22400%22%20y%3D%22270%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20fill%3D%22%23aaa%22%20text-anchor%3D%22middle%22%3ETocar%20para%20cargar%20video%3C%2Ftext%3E%3C%2Fsvg%3E" />
                   </div>
               )}
 
