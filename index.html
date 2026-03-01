@@ -93,19 +93,16 @@
 
     let auth = null;
     let db = null;
-    let storage = null; // INICIALIZAMOS EL ALMACENAMIENTO DE VIDEOS
+    let storage = null; 
     const isInvalidKey = !firebaseConfig.apiKey || firebaseConfig.apiKey.includes("PEGUE") || firebaseConfig.apiKey === "";
 
     if (!isInvalidKey) {
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         auth = firebase.auth();
         db = firebase.firestore();
-        storage = firebase.storage(); // ACTIVAMOS STORAGE
+        storage = firebase.storage(); 
         
-        // CORRECCIÓN: La configuración DEBE ir antes de habilitar la persistencia
         db.settings({ experimentalForceLongPolling: true });
-        
-        // ACELERADOR OFFLINE: Activar caché persistente para internet pobre
         db.enablePersistence().catch((err) => console.warn("Caché no disponible:", err));
     }
     
@@ -162,7 +159,60 @@
       return <a href={url} target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-xl border border-blue-100 block text-blue-600 font-bold truncate text-[11px] mb-2"><i className="fa-solid fa-link mr-2"></i> Abrir contenido externo</a>;
     };
 
-    // --- SESIÓN EN VIVO OPTIMIZADA (PATRÓN FACEBOOK LIVE) ---
+    // --- CEREBRO REPRODUCTOR DE VIDEOS ENLAZADOS ---
+    const VideoPlayer = ({ url }) => {
+        if (!url) return null;
+        
+        let embedUrl = null;
+        let isDirect = false;
+        
+        let ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|shorts\/|watch\?v=|watch\?.+&v=))((\w|-){11})/);
+        if (ytMatch && ytMatch[1]) embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
+        
+        else if (url.includes('facebook.com') && (url.includes('/videos/') || url.includes('/watch'))) {
+            embedUrl = `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=0`;
+        }
+        
+        else if (url.includes('vimeo.com')) {
+            let vimMatch = url.match(/vimeo\.com\/(?:.*\/)?(\d+)/);
+            if (vimMatch && vimMatch[1]) embedUrl = `https://player.vimeo.com/video/${vimMatch[1]}`;
+        }
+        
+        else if (url.includes('tiktok.com')) {
+            return (
+                 <a href={url} target="_blank" rel="noopener noreferrer" className="p-3 bg-black rounded-xl border border-gray-700 flex items-center justify-center text-white font-bold truncate text-[12px] mb-2 mx-4 mt-2 shadow-md hover:bg-gray-800 transition-colors">
+                     <i className="fa-brands fa-tiktok mr-3 text-xl text-[#00f2fe] animate-pulse"></i> Ver bendición en TikTok
+                 </a>
+            );
+        }
+        
+        else if (url.match(/\.(mp4|webm|ogg|mov)$/i)) isDirect = true;
+
+        if (embedUrl) {
+            return (
+                <div className="mt-2 w-full bg-black shadow-inner border-y border-gray-200">
+                    <div className="relative w-full pt-[56.25%]">
+                        <iframe src={embedUrl} className="absolute top-0 left-0 w-full h-full" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" border="0" frameBorder="0"></iframe>
+                    </div>
+                </div>
+            );
+        } else if (isDirect) {
+            return (
+                <div className="mt-2 bg-black flex justify-center shadow-inner border-y border-gray-200 relative">
+                    <video src={url} controls playsInline preload="none" className="max-h-[400px] w-full object-contain" />
+                </div>
+            );
+        } else {
+            return (
+                <a href={url} target="_blank" rel="noopener noreferrer" className="p-3 bg-blue-50 rounded-xl border border-blue-100 block text-blue-600 font-bold truncate text-[11px] mb-2 mx-4 mt-2 text-center">
+                    <i className="fa-solid fa-play-circle mr-2 text-lg"></i> Abrir video externo
+                </a>
+            );
+        }
+    };
+
+
+    // --- SESIÓN EN VIVO ESTILO FACEBOOK LIVE ---
     const LiveSession = ({ profile, broadcasterId, isBroadcaster, onClose }) => {
       const roomName = `DavarMinisterio_${broadcasterId}`;
       const [chatMsgs, setChatMsgs] = useState([]);
@@ -223,7 +273,7 @@
           setNewMsg('');
       };
 
-      // MEJORA: Algoritmo Facebook Live. Si es emisor (broadcaster) entra con cámara y micrófono. Si es espectador, entra bloqueado.
+      // Si es el que transmite, entra con cámara libre. Si es espectador, entra bloqueado.
       const jitsiParams = isBroadcaster
           ? `config.startWithAudioMuted=false&config.startWithVideoMuted=false&config.prejoinPageEnabled=false&config.disableDeepLinking=true&userInfo.displayName=${encodeURIComponent(profile?.name || 'Emisor')}`
           : `config.startWithAudioMuted=true&config.startWithVideoMuted=true&config.prejoinPageEnabled=false&config.disableDeepLinking=true&userInfo.displayName=${encodeURIComponent(profile?.name || 'Espectador')}`;
@@ -292,15 +342,12 @@
       const audioChunks = useRef([]); 
       const timerRef = useRef(null);
 
-      // ESTADOS DE VIDEO
-      const [videoFile, setVideoFile] = useState(null);
-      const [videoPreview, setVideoPreview] = useState('');
-      const [uploadProgress, setUploadProgress] = useState(0);
+      // ESTADO DE VIDEO OPTIMIZADO (Solo URL, cero peso)
+      const [embedVideoUrl, setEmbedVideoUrl] = useState('');
       
       const [confirmLiveOpen, setConfirmLiveOpen] = useState(false);
       const [confirmJoinId, setConfirmJoinId] = useState(null);
       
-      // ESTADOS PARA SALA DE PREPARACIÓN NATIVA DE CÁMARA
       const [prepStream, setPrepStream] = useState(null);
       const prepVideoRef = useRef(null);
 
@@ -308,20 +355,21 @@
       const [showComments, setShowComments] = useState({});
 
       let postCol;
+      let liveCol;
       if (db) {
         postCol = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts');
+        liveCol = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives');
       }
 
       useEffect(() => {
-        if(!user || !db || !postCol) return;
+        if(!user || !db || !postCol || !liveCol) return;
         const u1 = postCol.onSnapshot(s => setPosts(s.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>b.at-a.at).slice(0,40)), err => console.log("Muro Error"));
-        const u2 = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('lives').onSnapshot(s => setLives(s.docs.map(d=>({id:d.id, ...d.data()}))), err => console.log("Vivos Error"));
+        const u2 = liveCol.onSnapshot(s => setLives(s.docs.map(d=>({id:d.id, ...d.data()}))), err => console.log("Vivos Error"));
         return () => { u1(); u2(); };
       }, [user]);
 
-      // Efecto para acoplar la cámara en la sala de preparación
       useEffect(() => {
-          if (confirmLiveOpen && prepStream && prepVideoRef.current) {
+          if (confirmLiveOpen && prepStream && prepStream !== 'NO_MEDIA' && prepVideoRef.current) {
               prepVideoRef.current.srcObject = prepStream;
           }
       }, [confirmLiveOpen, prepStream]);
@@ -335,20 +383,20 @@
           }
       };
 
-      // MEJORA: Abrir cámara local primero antes de ir en vivo (Sala de Preparación)
       const handleOpenLivePrep = async () => {
           setConfirmLiveOpen(true);
+          setPrepStream(null);
           try {
               const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
               setPrepStream(stream);
           } catch (err) {
-              setSysMsg("⚠️ Autorice la cámara y el micrófono de su celular para poder transmitir.");
-              setTimeout(() => setSysMsg(''), 5000);
+              console.warn("Cámara no detectada:", err);
+              setPrepStream('NO_MEDIA'); 
           }
       };
 
       const cancelLivePrep = () => {
-          if (prepStream) {
+          if (prepStream && prepStream !== 'NO_MEDIA') {
               prepStream.getTracks().forEach(t => t.stop());
           }
           setPrepStream(null);
@@ -356,17 +404,18 @@
       };
 
       const confirmAndGoLive = () => {
-          // Apagamos la cámara de preparación para cedérsela al iframe oficial de transmisión
-          if (prepStream) {
+          if (prepStream && prepStream !== 'NO_MEDIA') {
               prepStream.getTracks().forEach(t => t.stop());
           }
           setPrepStream(null);
           setConfirmLiveOpen(false);
-          
-          // Damos 300ms de respiro al celular y lanzamos el vivo
-          setTimeout(() => {
-              onStartLive();
-          }, 300);
+          setTimeout(() => { onStartLive(); }, 300);
+      };
+
+      const forceCloseGhostStream = async (streamId) => {
+          if (liveCol) {
+              await liveCol.doc(streamId).delete();
+          }
       };
 
       const startVoice = async () => {
@@ -398,7 +447,7 @@
 
       const closeDialog = () => {
           cancelAudio(); setTxt(''); setImg(''); setLinkUrl(''); setLocation(''); setTag('');
-          setVideoFile(null); setVideoPreview(''); setUploadProgress(0);
+          setEmbedVideoUrl(''); // Limpiar la URL del video
           setLinkInputOpen(false); setIsPostDialogOpen(false); setLoadingText('Subiendo...');
       };
 
@@ -422,81 +471,56 @@
       };
 
       const sendPost = async () => {
-        if(loading || (!txt.trim() && !img && !audio && !linkUrl && !location && !tag && !videoFile) || !postCol) return;
-        setLoading(true); setSysMsg(''); setLoadingText('Preparando bendición...');
+        // Validación con la nueva variable embedVideoUrl
+        if(loading || (!txt.trim() && !img && !audio && !linkUrl && !location && !tag && !embedVideoUrl) || !postCol) return;
+        setLoading(true); setSysMsg(''); setLoadingText('Publicando bendición...');
         
         let finalTxt = txt;
         if (location) finalTxt += `\n📍 En: ${location}`;
         if (tag) finalTxt += `\n👤 Con: ${tag}`;
         if (linkUrl) finalTxt += `\n🔗 ${linkUrl}`;
 
-        let uploadedVideoUrl = '';
-        if (videoFile && storage) {
-            try {
-                setLoadingText('Iniciando subida...');
-                const videoRef = storage.ref(`davar_videos/${Date.now()}_${user.uid}`);
-                const uploadTask = videoRef.put(videoFile);
-                
-                uploadedVideoUrl = await new Promise((resolve, reject) => {
-                    uploadTask.on('state_changed', 
-                        (snapshot) => {
-                            const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                            setUploadProgress(progress);
-                            setLoadingText(`Subiendo video... ${progress}%`);
-                        },
-                        (error) => { reject(error); },
-                        async () => {
-                            const url = await uploadTask.snapshot.ref.getDownloadURL();
-                            resolve(url);
-                        }
-                    );
-                });
-            } catch(e) {
-                console.error(e);
-                setSysMsg("Error al subir video. Tal vez la conexión a internet se interrumpió.");
-                setLoading(false); setLoadingText('Subiendo...'); setUploadProgress(0);
-                return;
-            }
-        }
-
+        // Ya no hay subida pesada. Solo guardamos el texto de la URL.
         try { 
           await postCol.add({ 
               uid:user.uid, authorName:profile.name, authorPhoto:profile.photo || LOGO_URL, 
-              text:finalTxt, img, audio:audio, video:uploadedVideoUrl, at:Date.now(), reactions:{}, comments: [] 
+              text:finalTxt, img, audio:audio, videoUrl:embedVideoUrl, at:Date.now(), reactions:{}, comments: [] 
           });
           closeDialog();
         } catch(e) { setSysMsg("Error al subir bendición. Intente de nuevo."); }
-        setLoading(false); setLoadingText('Subiendo...'); setUploadProgress(0);
+        setLoading(false); setLoadingText('Subiendo...');
       };
 
       return (
         <div className="space-y-4 pb-24 animate-up text-left w-full max-w-[620px] mx-auto mt-2">
           
-          {/* MEJORA: SALA DE PREPARACIÓN DE TRANSMISIÓN */}
+          {/* SALA DE PREPARACIÓN DE TRANSMISIÓN */}
           {confirmLiveOpen && (
               <div className="fixed inset-0 bg-black z-[7000] flex flex-col items-center justify-center p-4 animate-in">
                   <h3 className="font-black text-xl text-white uppercase mb-2 animate-pulse"><span className="text-red-500">●</span> Preparando Transmisión</h3>
                   <p className="text-[11px] text-gray-300 mb-4 text-center max-w-sm px-4">Ajuste su encuadre. Al terminar la transmisión, el video será eliminado automáticamente sin dejar registro en el Arca.</p>
                   
                   <div className="w-full max-w-sm bg-gray-900 rounded-2xl overflow-hidden shadow-2xl border border-gray-700 mb-6 relative aspect-[3/4] flex items-center justify-center">
-                      {prepStream ? (
+                      {prepStream && prepStream !== 'NO_MEDIA' ? (
                           <video ref={prepVideoRef} autoPlay playsInline muted className="w-full h-full object-cover transform -scale-x-100" />
                       ) : (
                           <div className="text-gray-500 flex flex-col items-center">
-                             <i className="fa-solid fa-camera animate-pulse text-3xl mb-2"></i>
-                             <p className="text-xs font-bold uppercase tracking-widest">Activando cámara...</p>
+                             <i className={`fa-solid ${prepStream === 'NO_MEDIA' ? 'fa-video-slash' : 'fa-camera animate-pulse'} text-3xl mb-2`}></i>
+                             <p className="text-xs font-bold uppercase tracking-widest text-center px-4">
+                                 {prepStream === 'NO_MEDIA' ? 'Sin Cámara (Modo Prueba / PC)' : 'Activando cámara...'}
+                             </p>
                           </div>
                       )}
                   </div>
                   
                   <div className="flex gap-4 w-full max-w-sm px-4">
                       <button onClick={cancelLivePrep} className="flex-1 bg-gray-800 text-gray-300 py-4 rounded-xl font-bold uppercase text-[11px] active:scale-95 border border-gray-700">Cancelar</button>
-                      <button onClick={confirmAndGoLive} disabled={!prepStream} className="flex-1 bg-[#1877F2] text-white py-4 rounded-xl font-black uppercase text-[11px] shadow-lg active:scale-95 disabled:opacity-50">Transmitir Ahora</button>
+                      <button onClick={confirmAndGoLive} className="flex-1 bg-[#1877F2] text-white py-4 rounded-xl font-black uppercase text-[11px] shadow-lg active:scale-95">Transmitir Ahora</button>
                   </div>
               </div>
           )}
 
-          {/* MEJORA: SALA DE INGRESO COMO ESPECTADOR */}
+          {/* SALA DE INGRESO COMO ESPECTADOR */}
           {confirmJoinId && (
               <div className="fixed inset-0 bg-black/80 z-[7000] flex items-center justify-center p-4">
                   <div className="bg-white rounded-3xl p-6 text-center shadow-2xl max-w-xs w-full animate-in border-t-4 border-[#1877F2]">
@@ -512,9 +536,16 @@
           )}
 
           {lives.map(l => (
-            <div key={l.id} className="bg-red-500 p-3 rounded-xl flex items-center justify-between text-white shadow-lg animate-pulse mx-2 sm:mx-0">
+            <div key={l.id} className="bg-red-500 p-3 rounded-xl flex items-center justify-between text-white shadow-lg animate-pulse mx-2 sm:mx-0 relative">
               <div className="flex items-center gap-3"><img src={l.photo || LOGO_URL} onError={(e)=>{e.target.src=LOGO_URL}} className="h-9 w-9 rounded-full border-2 border-white object-cover shadow-sm bg-white" /><p className="font-bold text-[11px] uppercase italic">● EN VIVO: {l.name}</p></div>
-              <button onClick={()=>setConfirmJoinId(l.uid)} className="bg-white text-red-600 px-5 py-1.5 rounded-full font-black text-[10px] uppercase shadow-sm active:scale-95 transition-all leading-none">UNIRSE</button>
+              <div className="flex items-center gap-2">
+                  {(isAdmin || l.uid === user?.uid) && (
+                      <button onClick={() => forceCloseGhostStream(l.id)} className="bg-red-700 p-1.5 rounded-full text-white shadow-inner active:scale-90" title="Forzar Cierre (Eliminar Fantasma)">
+                          <i className="fa-solid fa-trash-can text-[10px]"></i>
+                      </button>
+                  )}
+                  <button onClick={()=>setConfirmJoinId(l.uid)} className="bg-white text-red-600 px-4 py-1.5 rounded-full font-black text-[10px] uppercase shadow-sm active:scale-95 transition-all leading-none">UNIRSE</button>
+              </div>
             </div>
           ))}
 
@@ -533,47 +564,15 @@
                   <input type="file" className="hidden" accept="image/*" onChange={async e=>{ if(profile && isUnlocked) { setImg(await compressMedia(e.target.files[0])); setIsPostDialogOpen(true); } }} />
                 </label>
                 
-                {/* MEJORA: Filtro Inteligente de 1 Minuto y Límite estricto de peso (15MB) */}
-                <label className="flex-1 flex items-center justify-center gap-1 sm:gap-2 p-2 rounded-lg cursor-pointer text-purple-600 font-black hover:bg-gray-50 active:scale-95 transition-transform" onClick={(e) => { if(!profile || !isUnlocked) { e.preventDefault(); requireAuth(()=>{}); } }}>
+                <div onClick={() => requireAuth(() => {
+                    const vUrl = prompt("Pegue aquí el enlace del video (YouTube, Facebook, etc.):");
+                    if (vUrl && vUrl.trim()) {
+                        setEmbedVideoUrl(vUrl.trim());
+                        setIsPostDialogOpen(true);
+                    }
+                })} className="flex-1 flex items-center justify-center gap-1 sm:gap-2 p-2 rounded-lg cursor-pointer text-purple-600 font-black hover:bg-gray-50 active:scale-95 transition-transform">
                   <i className="fa-solid fa-film text-lg sm:text-xl"></i><span className="text-[9px] sm:text-[11px]">VIDEO</span>
-                  <input type="file" className="hidden" accept=".mp4,.mov,.avi,.mkv,.webm,.m4v" onChange={e=>{ 
-                      if(profile && isUnlocked) { 
-                          const f = e.target.files[0]; 
-                          if(!f) return;
-                          
-                          // Filtro de peso: Máximo 15MB para asegurar carga veloz
-                          if(f.size > 15 * 1024 * 1024) { 
-                              setSysMsg("⚠️ El video pesa mucho. Intente con uno más corto o menos pesado (Máx 15MB)."); 
-                              setTimeout(()=>setSysMsg(''), 6000); 
-                              return; 
-                          }
-
-                          // Filtro de duración: Máximo 1 minuto (60 seg + 5s de gracia)
-                          const videoURL = URL.createObjectURL(f);
-                          const tempVid = document.createElement('video');
-                          tempVid.preload = 'metadata';
-                          
-                          tempVid.onloadedmetadata = () => {
-                              URL.revokeObjectURL(videoURL);
-                              if (tempVid.duration > 65) { 
-                                  setSysMsg("⚠️ El video dura más de 1 minuto. Seleccione mensajes cortos y al punto.");
-                                  setTimeout(()=>setSysMsg(''), 6000);
-                                  return;
-                              }
-                              // Si pasa los filtros, se prepara para subir
-                              setVideoFile(f); setVideoPreview(URL.createObjectURL(f)); setIsPostDialogOpen(true); 
-                          };
-                          
-                          // Por si falla la lectura de duración en algún dispositivo antiguo, aplicamos solo el de peso
-                          tempVid.onerror = () => {
-                              URL.revokeObjectURL(videoURL);
-                              setVideoFile(f); setVideoPreview(URL.createObjectURL(f)); setIsPostDialogOpen(true);
-                          };
-                          
-                          tempVid.src = videoURL;
-                      } 
-                  }} />
-                </label>
+                </div>
 
                 <div onClick={() => requireAuth(startVoice)} className="flex-1 flex items-center justify-center gap-1 sm:gap-2 p-2 rounded-lg cursor-pointer text-orange-500 font-black hover:bg-gray-50 active:scale-95 transition-transform"><i className="fa-solid fa-microphone-lines text-lg sm:text-xl"></i><span className="text-[9px] sm:text-[11px]">VOZ</span></div>
               </div>
@@ -619,11 +618,12 @@
              
              {img && <div className="mt-2 relative inline-block"><img src={img} className="h-32 object-cover rounded-lg shadow-md border-2 border-white" /><i onClick={()=>setImg('')} className="fa-solid fa-circle-xmark absolute -top-2 -right-2 text-gray-800 cursor-pointer bg-white rounded-full text-xl shadow-lg"></i></div>}
              
-             {videoPreview && (
+             {/* VISTA PREVIA DEL VIDEO ENLAZADO */}
+             {embedVideoUrl && (
                 <div className="mt-2 relative inline-block w-full">
-                    <p className="text-[10px] text-purple-600 font-bold mb-1 uppercase tracking-widest"><i className="fa-solid fa-compress mr-1"></i> Video listo (Compresión nativa activada)</p>
-                    <video src={videoPreview} controls className="w-full max-h-48 rounded-lg shadow-md border border-gray-200 bg-black object-contain" />
-                    <i onClick={()=>{setVideoPreview(''); setVideoFile(null);}} className="fa-solid fa-circle-xmark absolute top-6 -right-2 text-red-500 cursor-pointer bg-white rounded-full text-xl shadow-lg hover:scale-110"></i>
+                    <p className="text-[10px] text-purple-600 font-bold mb-1 uppercase tracking-widest"><i className="fa-solid fa-link mr-1"></i> Video Listo para Publicar</p>
+                    <VideoPlayer url={embedVideoUrl} />
+                    <button onClick={()=>setEmbedVideoUrl('')} className="absolute top-0 right-0 bg-white text-red-500 rounded-full shadow-md p-2 active:scale-90"><i className="fa-solid fa-trash-can"></i> Quitar Video</button>
                 </div>
              )}
              
@@ -646,14 +646,6 @@
                 <i onClick={()=>{const t = prompt("¿A quién desea etiquetar?"); if(t) setTag(t);}} className="fa-solid fa-user-tag text-green-600 text-xl cursor-pointer active:scale-90 bg-white p-2 rounded-lg shadow-sm" title="Etiquetar Hermano"></i>
              </div>
              
-             {loading && uploadProgress > 0 && uploadProgress < 100 && (
-                 <div className="w-full bg-gray-100 rounded-full h-3 mb-3 shadow-inner overflow-hidden border border-gray-200">
-                     <div className="bg-[#1877F2] h-3 rounded-full transition-all duration-300 relative overflow-hidden" style={{width: `${uploadProgress}%`}}>
-                         <div className="absolute inset-0 bg-white/20 animate-[pulse_1s_ease-in-out_infinite]"></div>
-                     </div>
-                 </div>
-             )}
-
              <button onClick={sendPost} disabled={loading || (audioState !== 'idle' && audioState !== 'recorded')} className="w-full bg-[#1877F2] text-white font-black py-4 rounded-xl shadow-md active:scale-95 text-[13px] uppercase tracking-widest transition-all disabled:opacity-50">
                  {loading ? loadingText : 'Compartir Bendición'}
              </button>
@@ -675,12 +667,8 @@
               
               <MediaProjector url={p.img} />
               
-              {/* MEJORA REPRODUCTOR: playsInline para evitar que se abra en pantalla completa a la fuerza en iPhone */}
-              {p.video && (
-                  <div className="mt-2 bg-black flex justify-center shadow-inner border-y border-gray-200 relative">
-                      <video src={p.video} controls playsInline preload="none" className="max-h-[400px] w-full object-contain" poster="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%25%22%20height%3D%22100%25%22%20viewBox%3D%220%200%20800%20400%22%3E%3Crect%20width%3D%22800%22%20height%3D%22400%22%20fill%3D%22%23111%22%2F%3E%3Ccircle%20cx%3D%22400%22%20cy%3D%22200%22%20r%3D%2240%22%20fill%3D%22%231877F2%22%20opacity%3D%220.9%22%2F%3E%3Cpolygon%20points%3D%22385%2C175%20385%2C225%20425%2C200%22%20fill%3D%22%23fff%22%2F%3E%3Ctext%20x%3D%22400%22%20y%3D%22270%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20fill%3D%22%23aaa%22%20text-anchor%3D%22middle%22%3ETocar%20para%20cargar%20video%3C%2Ftext%3E%3C%2Fsvg%3E" />
-                  </div>
-              )}
+              {/* REPRODUCTOR INTELIGENTE EN EL MURO */}
+              <VideoPlayer url={p.videoUrl || p.video} />
 
               {p.audio && <div className="px-4 py-3 bg-gray-50 border-y border-gray-100 shadow-inner"><audio src={p.audio} controls preload="none" className="w-full h-10" /></div>}
               
@@ -1099,7 +1087,7 @@
       );
     }
 
-    // --- MEJORA: PERFIL ESTILO MURO PARA REVISAR Y EDITAR PUBLICACIONES ---
+    // --- PERFIL ESTILO MURO PARA REVISAR Y EDITAR PUBLICACIONES ---
     function ProfilePosts({ user }) {
       const [myPosts, setMyPosts] = useState([]);
       const [editingId, setEditingId] = useState(null);
@@ -1152,11 +1140,8 @@
               
               <MediaProjector url={p.img} />
               
-              {p.video && (
-                  <div className="mt-2 bg-black flex justify-center shadow-inner border-y border-gray-200 relative">
-                      <video src={p.video} controls playsInline preload="none" className="max-h-[400px] w-full object-contain" poster="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%25%22%20height%3D%22100%25%22%20viewBox%3D%220%200%20800%20400%22%3E%3Crect%20width%3D%22800%22%20height%3D%22400%22%20fill%3D%22%23111%22%2F%3E%3Ccircle%20cx%3D%22400%22%20cy%3D%22200%22%20r%3D%2240%22%20fill%3D%22%231877F2%22%20opacity%3D%220.9%22%2F%3E%3Cpolygon%20points%3D%22385%2C175%20385%2C225%20425%2C200%22%20fill%3D%22%23fff%22%2F%3E%3Ctext%20x%3D%22400%22%20y%3D%22270%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20fill%3D%22%23aaa%22%20text-anchor%3D%22middle%22%3ETocar%20para%20cargar%20video%3C%2Ftext%3E%3C%2Fsvg%3E" />
-                  </div>
-              )}
+              {/* REPRODUCTOR EN EL PERFIL */}
+              <VideoPlayer url={p.videoUrl || p.video} />
 
               {p.audio && <div className="px-4 py-3 bg-gray-50 border-y border-gray-100 shadow-inner"><audio src={p.audio} controls preload="none" className="w-full h-10" /></div>}
             </div>
@@ -1180,14 +1165,11 @@
       const [deferredPrompt, setDeferredPrompt] = useState(null);
       const [showInstallModal, setShowInstallModal] = useState(false);
 
-      // MEJORA: Función para subir automáticamente al inicio de la página
       const handleHomeClick = () => {
           if (tab === 'feed') {
-              // Si ya estamos en el muro, subimos suavemente
               const scroller = document.getElementById('main-scroller');
               if (scroller) scroller.scrollTo({ top: 0, behavior: 'smooth' });
           } else {
-              // Si estamos en otra pestaña, cambiamos al muro y luego subimos
               setTab('feed');
               setTimeout(() => {
                   const scroller = document.getElementById('main-scroller');
@@ -1442,7 +1424,7 @@
                             </div>
                           </div>
                           
-                          {/* MEJORA: El perfil ahora muestra el historial completo estilo Muro para revisar y editar */}
+                          {/* El perfil ahora muestra el historial completo estilo Muro para revisar y editar */}
                           <ProfilePosts user={user} />
                           
                         </div>
